@@ -1,9 +1,10 @@
 from sequemem import *
 
-vocab = ["are", "we", "there", "here", "question", "statement"]
-are_we = ["are","we"]
-are_we_there = ["are","we","there"]
-are_we_here = ["are","we","here"]
+def tokenize(sentence):
+    return [word.strip('\t\n\r .') for word in sentence.split(' ')]
+
+def test_tokenize():
+    assert tokenize("we are") == ["we", "are"]
 
 
 def test_layer_create():
@@ -55,4 +56,17 @@ def test_layer_create_two_words_predict_two():
     prediction = layer.predict(["are","we"])
     layer.show_status()
     assert sorted(prediction) == sorted(["here","there"])
+
+def test_several_sentences():
+    layer = Layer()
+    with open('data/cortical_example1.txt','r') as source:
+        for sentence in source:
+            tokens = tokenize(sentence)
+            layer.predict(tokens)
+
+    layer.show_status()
+    sentence = "coyote eat"
+    print sentence
+    print layer.predict(tokenize(sentence))
+    raise
 

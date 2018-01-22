@@ -9,18 +9,13 @@ class Neuron:
     def set_active(self):
         if self.state == 'A':
             return
-        elif self.state == 'I':
+        elif self.state == 'I' or self.state == 'P':
             for neuron in self.ns_downstream:
                 neuron.set_inactive()
             for neuron in self.ns_upstream:
                 neuron.set_predict()
-            self.state = 'A'
-        elif self.state == 'P':
-            for neuron in self.ns_downstream:
-                neuron.set_inactive()
-            for neuron in self.ns_upstream:
-                neuron.set_predict()
-            self.state = 'A'
+
+        self.state = 'A'
 
     def set_predict(self):
         if self.state == 'P':
@@ -28,19 +23,20 @@ class Neuron:
         elif self.state == 'A':
             raise "active neuron can't be set to predict"
         elif self.state == 'I':
-            self.state = 'P'
+            pass
+
+        self.state = 'P'
 
     def set_inactive(self):
         if self.state == 'I':
             return
         elif self.state == 'P':
-            for neuron in self.ns_upstream:
-                neuron.set_inactive()
-            self.state = 'I'
+            pass
         elif self.state == 'A':
             for neuron in self.ns_upstream:
                 neuron.set_inactive()
-            self.state = 'I'
+
+        self.state = 'I'
 
     def add_upstream(self, neuron):
         neuron.add_downstream(self)
