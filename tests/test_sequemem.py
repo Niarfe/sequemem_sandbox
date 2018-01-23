@@ -65,7 +65,7 @@ def test_several_sentences():
             layer.predict(tokens)
 
     layer.show_status()
-    sentence = "coyote eat"
+    sentence = "fox eat"
     print sentence
     print layer.predict(tokenize(sentence))
     raise
