@@ -35,3 +35,5 @@ wolf is predator.
 predator is wolf.
 sheep is prey.
 prey is sheep
+fox is predator
+predator is fox

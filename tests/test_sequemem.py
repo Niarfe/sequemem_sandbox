@@ -1,3 +1,5 @@
+import sys
+sys.path.append("./sequemem")
 from sequemem import *
 
 def tokenize(sentence):
@@ -56,17 +58,27 @@ def test_layer_create_two_words_predict_two():
     prediction = layer.predict(["are","we"])
     layer.show_status()
     assert sorted(prediction) == sorted(["here","there"])
-
+import random
 def test_several_sentences():
     layer = Layer()
-    with open('data/cortical_example1.txt','r') as source:
+    with open('data/cortical_example1.1.txt','r') as source:
         for sentence in source:
             tokens = tokenize(sentence)
             layer.predict(tokens)
 
-    layer.show_status()
     sentence = "fox eat"
-    print sentence
-    print layer.predict(tokenize(sentence))
-    raise
+    print(sentence)
+    print(layer.predict(tokenize(sentence)))
+    layer.show_status()
+    fox_is = layer.predict(tokenize("fox is"))
+    print("What a fox is: ", fox_is)
+    similar_to_fox = layer.predict(fox_is + ["is"])
+    similar_to_fox.remove("fox")
+    print("Similar to fox: ", similar_to_fox)
+    random_choice = random.choice(similar_to_fox)
+    print("Random Choice: ", random_choice)
+
+    res = layer.predict([ random_choice ] + ["eat"])
+    print("Well pick this guy and see what he/she eats: ",res)
+    #raise
 

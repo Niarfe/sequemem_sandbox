@@ -64,11 +64,11 @@ class Layer:
         self._reset()
         for input in sequence:
             self._hit(input)
-        return self._get_predicted()
+        return list(self._get_predicted())
 
 
     def _reset(self):
-        for key, neurons in self.columns.iteritems():
+        for key, neurons in self.columns.items():
             for neuron in neurons:
                 neuron.set_inactive()
         self.activation_neuron.set_active()
@@ -114,9 +114,9 @@ class Layer:
                 ]
 
     def column_keys(self):
-        return self.columns.keys()
+        return [key for key in self.columns.keys()]
 
     def show_status(self):
-        print "LAYER STATUS:"
-        for key, neurons in self.columns.iteritems():
-            print key, '\t', [neuron.state for neuron in neurons]
+        print("LAYER STATUS:")
+        for key, neurons in self.columns.items():
+            print(key, '\t', [neuron.state for neuron in neurons])
