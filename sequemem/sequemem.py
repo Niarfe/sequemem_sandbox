@@ -60,8 +60,26 @@ class Layer:
         self.is_learning = False
         self.activation_neuron = Neuron()
 
+    def tokenize(self, sentence):
+        return [word.strip('\t\n\r .') for word in sentence.split(' ')]
+
+    def train_from_file(self, filepath):
+        with open(filepath,'r') as source:
+            for sentence in source:
+                tokens = self.tokenize(sentence)
+                self.predict(tokens)
+
+    def is_like(self, word):
+        if type(word) == type([]):
+            assert len(word) == 1, "Multiple is_like not supported yet"
+            word = word[0]
+        return self.predict("{} is".format(word))
+
     def predict(self, sequence):
         self._reset()
+        if type(sequence) == type(""):
+            sequence = self.tokenize(sequence)
+
         for input in sequence:
             self._hit(input)
         return list(self._get_predicted())

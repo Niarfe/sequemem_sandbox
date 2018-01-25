@@ -17,6 +17,8 @@ wolf eat rabbit.
 wolf eat squirrel.
 cat is predator.
 predator is cat.
+cat is pet.
+pet is cat.
 cow is prey.
 prey is cow.
 coyote is predator.

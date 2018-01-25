@@ -61,24 +61,43 @@ def test_layer_create_two_words_predict_two():
 import random
 def test_several_sentences():
     layer = Layer()
-    with open('data/cortical_example1.1.txt','r') as source:
-        for sentence in source:
-            tokens = tokenize(sentence)
-            layer.predict(tokens)
+    layer.train_from_file('data/cortical_example1.1.txt')
 
     sentence = "fox eat"
     print(sentence)
-    print(layer.predict(tokenize(sentence)))
-    layer.show_status()
-    fox_is = layer.predict(tokenize("fox is"))
-    print("What a fox is: ", fox_is)
-    similar_to_fox = layer.predict(fox_is + ["is"])
+    print(layer.predict(sentence))
+
+    similar_to_fox = layer.is_like(layer.is_like("fox"))
     similar_to_fox.remove("fox")
+
     print("Similar to fox: ", similar_to_fox)
     random_choice = random.choice(similar_to_fox)
     print("Random Choice: ", random_choice)
 
     res = layer.predict([ random_choice ] + ["eat"])
     print("Well pick this guy and see what he/she eats: ",res)
-    #raise
 
+def test_prep_prediction_new():
+    layer = Layer()
+    layer.train_from_file('data/cortical_example1.1.txt')
+    animal = "fox"
+    verb = "eat"
+    sentence = "{} {}".format(animal, verb)
+    print(sentence)
+    print("IS LIKE", layer.is_like(animal))
+
+    similar_to_fox = layer.is_like(layer.is_like(animal))
+    similar_to_fox.remove(animal)
+
+    res = {}
+    collected = []
+    for simile in similar_to_fox:
+        res[simile] = layer.predict([simile, verb])
+        collected.extend(layer.predict([simile, verb]))
+
+    finalcol = list(set(collected))
+    for k, v in res.items():
+        print(k, v)
+    print(finalcol)
+
+    assert sorted(finalcol) == sorted(['flies', 'squirrel', 'cow', 'salmon', 'rodent', 'rabbit', 'mice'])

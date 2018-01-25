@@ -11,3 +11,6 @@ setupenv: # Set up the python3 virtualenv for the first time
 requires: # Install all the requirements
 	pip -r requirements.txt
 
+
+startenv: # Start the env virtual environment
+	. env/bin/activate
