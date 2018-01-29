@@ -76,22 +76,22 @@ class Layer:
         return self.predict("{} is".format(word))
 
     def predict(self, sequence):
-        self._reset()
+        self.reset()
         if type(sequence) == type(""):
             sequence = self.tokenize(sequence)
 
         for input in sequence:
-            self._hit(input)
-        return list(self._get_predicted())
+            self.hit(input)
+        return list(self.get_predicted())
 
 
-    def _reset(self):
+    def reset(self):
         for key, neurons in self.columns.items():
             for neuron in neurons:
                 neuron.set_inactive()
         self.activation_neuron.set_active()
 
-    def _hit(self, column_key):
+    def hit(self, column_key):
         npred = self._column_get('P', column_key)
         if len(npred) > 0:
             for neuron in npred:
@@ -99,14 +99,14 @@ class Layer:
             self.is_learning = False
         else:
             neuron = Neuron()
-            actives = self._get_all_actives()
+            actives = self.get_all_actives()
             for active in actives:
                 active.add_upstream(neuron)
             self.columns[column_key].append(neuron)
             neuron.set_active()
             self.is_learning = True
 
-    def _get_all_actives(self):
+    def get_all_actives(self):
         actives = []
         if self.activation_neuron.state == 'A':
             actives.append(self.activation_neuron)
@@ -122,7 +122,7 @@ class Layer:
             if neuron.state == state
             ]
 
-    def _get_predicted(self):
+    def get_predicted(self):
         if self.is_learning:
             return self.columns.keys()
         else:
@@ -137,7 +137,22 @@ class Layer:
     def show_status(self):
         print("LAYER STATUS:")
         for key, neurons in self.columns.items():
-            print(key, '\t', [neuron.state for neuron in neurons])
+            print(
+                "{}:\t{}".format(
+                    key,
+                    str([neuron.state for neuron in neurons])
+                    )
+            )
+    def _get_neurons(self, state):
+        return [neuron
+            for key in self.columns.keys()
+            for neuron in self._column_get(state, key)
+            ]
+    def get_active_neurons(self):
+        return self._get_neurons('A')
+    def get_predicted_neurons(self):
+        return self._get_neurons('P')
+
 
 class Logic:
     def __init__(self, layer):
@@ -147,3 +162,49 @@ class Logic:
         assert type(word) == type(""), "Input to double_ism is a string"
 
         return self.layer.predict(self.layer.predict([word, "is"] ) + ["is"])
+
+
+class Brain:
+    def __init__(self):
+        self.cortex = Layer()
+        self.hypo = Layer()
+        self.layers = [
+            self.cortex,
+            self.hypo
+        ]
+        self.current_context = None
+        self.current_context_neuron = None
+        self.active_context_sentence = None
+
+    def train_from_file(self, filepath):
+        with open(filepath,'r') as source:
+            for sentence in source:
+                tokens = self.tokenize(sentence)
+                if tokens[0] == 'about':
+                    self.current_context = tokens[1]
+                    self.active_context_sentence = sentence
+                    self.hypo.predict(sentence)
+                else:
+                    self.cortex.reset()
+                    self.hypo.predict(self.active_context_sentence)
+                    hypo_actives = self.hypo.get_all_actives()
+                    print("lerning hypo active", hypo_actives)
+                    for input in tokens:
+                        self.cortex.hit(input)
+                        active_hypo_neurons = self.hypo.get_active_neurons()
+                        print("hypo_actives 2", active_hypo_neurons)
+                        active_cortex_neurons = self.cortex.get_active_neurons()
+                        for cortex_neuron in active_cortex_neurons:
+                            for hypo_neuron in active_hypo_neurons:
+                                print("really tying neurons together")
+                                cortex_neuron.add_upstream(hypo_neuron)
+
+
+    def tokenize(self, sentence): # is dup with layer tokenize!
+        return [word.strip('\t\n\r .') for word in sentence.split(' ')]
+
+    def predict(self, sentence):
+        self.hypo.reset()
+        predicted = self.cortex.predict(sentence)
+        predicted_context = self.hypo.get_predicted()
+        return predicted, predicted_context

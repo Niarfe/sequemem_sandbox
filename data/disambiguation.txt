@@ -1,0 +1,6 @@
+about music
+violin is instrument
+bass is instrument
+about fishing
+salmon is fish
+bass is fish

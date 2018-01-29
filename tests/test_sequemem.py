@@ -109,3 +109,36 @@ def test_logic():
     layer.predict("homer is man")
     logic = Logic(layer)
     assert logic.double_ism("homer") == ['mortal'], "Cheesy first try at logic"
+
+
+def test_brain_create():
+    brain = Brain()
+    assert len(brain.layers) == 2, "We should have a cortex and a hypothalamus"
+
+def test_brain_train_basic():
+    brain = Brain()
+    brain.train_from_file('data/disambiguation.txt')
+    brain.hypo.reset()
+    brain.hypo.show_status()
+    brain.cortex.reset()
+    brain.cortex.predict("violin")
+    brain.hypo.show_status()
+    pews = brain.hypo.get_predicted_neurons()
+    for p in pews:
+        print("@@@@@@hypo pred neurons", p)
+
+
+    print("################")
+    corepred, hypopred = brain.predict("violin is")
+    brain.hypo.show_status()
+    brain.cortex.show_status()
+    assert corepred == ['instrument']
+    assert hypopred == ['music']
+    corepred, hypopred = brain.predict("bass is")
+    #brain.hypo.show_status()
+    #brain.cortex.show_status()
+    print("THE corepred:  ", corepred)
+    print("THE hypopred:  ", hypopred)
+    assert corepred == ['instrument', 'fish']
+    assert hypopred == ['about','music','fishing']
+    raise
