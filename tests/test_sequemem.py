@@ -58,6 +58,7 @@ def test_layer_create_two_words_predict_two():
     prediction = layer.predict(["are","we"])
     layer.show_status()
     assert sorted(prediction) == sorted(["here","there"])
+
 import random
 def test_several_sentences():
     layer = Layer()
@@ -101,3 +102,10 @@ def test_prep_prediction_new():
     print(finalcol)
 
     assert sorted(finalcol) == sorted(['flies', 'squirrel', 'cow', 'salmon', 'rodent', 'rabbit', 'mice'])
+
+def test_logic():
+    layer = Layer()
+    layer.predict("man is mortal")
+    layer.predict("homer is man")
+    logic = Logic(layer)
+    assert logic.double_ism("homer") == ['mortal'], "Cheesy first try at logic"
