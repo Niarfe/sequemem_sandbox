@@ -140,7 +140,7 @@ def test_multiple_inputs():
     assert layer.predict(["A", "B"]) == ["C"]
     assert contx.get_all_actives() == []
     assert contx.get_predicted() == ["upper"]
-    
+
     context = "lower"
     sequence = ["A","b","c"]
     cumulative = []
@@ -194,7 +194,7 @@ def test_classic_bass_example():
     assert layer.predict(["bass", "is"]) == ["instrument"]
     assert contx.get_all_actives() == []
     assert contx.get_predicted() == ["music"]
-    
+
     context = "fishing"
     sequence = ["bass","is","fish"]
     cumulative = []
@@ -226,4 +226,6 @@ def test_classic_bass_example():
 def test_brain_train():
     brain = Brain()
     brain.train_from_file('data/disambiguation.txt')
-    assert brain.predict("bass is") == ["instrument"]
+    prediction = brain.predict(["bass", "is"])
+    print(prediction)
+    assert prediction  == ["instrument"], prediction

@@ -186,7 +186,7 @@ class Brain:
                     self.active_context_sentence = sentence
                 else:
                     cumulative = []
-                    for word in sentence:
+                    for word in self.tokenize(sentence):
                         cumulative.append(word)
                         self.layer.predict(cumulative)
                         self.contx.predict([self.current_context])
@@ -201,8 +201,9 @@ class Brain:
     def tokenize(self, sentence): # is dup with layer tokenize!
         return [word.strip('\t\n\r .') for word in sentence.split(' ')]
 
-    def predict(self, sentence):
+    def predict(self, sentence, context=None):
         pred_layer = self.layer.predict(sentence)
-        self.contx.predict('music')
+        context = "neutral" if not context else context
+        self.contx.predict(context)
         pred_layer2 = self.layer.get_predicted()
         return list(set(pred_layer) & set(pred_layer2))
