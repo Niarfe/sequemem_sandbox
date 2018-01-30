@@ -221,3 +221,9 @@ def test_classic_bass_example():
     contx.show_status()
     final_prediction = list(set(pred_layer) & set(pred_layer2))
     assert final_prediction == ["fish"]
+
+
+def test_brain_train():
+    brain = Brain()
+    brain.train_from_file('data/disambiguation.txt')
+    assert brain.predict("bass is") == ["instrument"]

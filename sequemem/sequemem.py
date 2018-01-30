@@ -167,11 +167,11 @@ class Logic:
 
 class Brain:
     def __init__(self):
-        self.cortex = Layer()
-        self.hypo = Layer()
+        self.layer = Layer()
+        self.contx = Layer()
         self.layers = [
-            self.cortex,
-            self.hypo
+            self.layer,
+            self.contx
         ]
         self.current_context = None
         self.current_context_neuron = None
@@ -184,28 +184,25 @@ class Brain:
                 if tokens[0] == 'about':
                     self.current_context = tokens[1]
                     self.active_context_sentence = sentence
-                    self.hypo.predict(sentence)
                 else:
-                    self.cortex.reset()
-                    self.hypo.predict(self.active_context_sentence)
-                    hypo_actives = self.hypo.get_all_actives()
-                    print("lerning hypo active", hypo_actives)
-                    for input in tokens:
-                        self.cortex.hit(input)
-                        active_hypo_neurons = self.hypo.get_active_neurons()
-                        print("hypo_actives 2", active_hypo_neurons)
-                        active_cortex_neurons = self.cortex.get_active_neurons()
-                        for cortex_neuron in active_cortex_neurons:
-                            for hypo_neuron in active_hypo_neurons:
-                                print("really tying neurons together")
-                                cortex_neuron.add_upstream(hypo_neuron)
+                    cumulative = []
+                    for word in sentence:
+                        cumulative.append(word)
+                        self.layer.predict(cumulative)
+                        self.contx.predict([self.current_context])
+                        lact = self.layer.get_active_neurons()
+                        cact = self.contx.get_active_neurons()
+                        for cn in cact:
+                            for ln in lact:
+                                cn.add_upstream(ln)
+                                ln.add_upstream(cn)
 
 
     def tokenize(self, sentence): # is dup with layer tokenize!
         return [word.strip('\t\n\r .') for word in sentence.split(' ')]
 
     def predict(self, sentence):
-        self.hypo.reset()
-        predicted = self.cortex.predict(sentence)
-        predicted_context = self.hypo.get_predicted()
-        return predicted, predicted_context
+        pred_layer = self.layer.predict(sentence)
+        self.contx.predict('music')
+        pred_layer2 = self.layer.get_predicted()
+        return list(set(pred_layer) & set(pred_layer2))
