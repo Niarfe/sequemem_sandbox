@@ -115,30 +115,87 @@ def test_brain_create():
     brain = Brain()
     assert len(brain.layers) == 2, "We should have a cortex and a hypothalamus"
 
-def test_brain_train_basic():
-    brain = Brain()
-    brain.train_from_file('data/disambiguation.txt')
-    brain.hypo.reset()
-    brain.hypo.show_status()
-    brain.cortex.reset()
-    brain.cortex.predict("violin")
-    brain.hypo.show_status()
-    pews = brain.hypo.get_predicted_neurons()
-    for p in pews:
-        print("@@@@@@hypo pred neurons", p)
+def test_multiple_inputs():
+    layer = Layer()
+    contx = Layer()
+
+    context = "upper"
+    sequence = ["A","B","C"]
+    cumulative = []
+    for letter in sequence:
+        cumulative.append(letter)
+        layer.predict(cumulative)
+        contx.predict([context])
+        lact = layer.get_active_neurons()
+        cact = contx.get_active_neurons()
+        for cn in cact:
+            for ln in lact:
+                cn.add_upstream(ln)
+                ln.add_upstream(cn)
+
+    assert layer.predict(["A"]) == ["B"]
+    assert contx.get_all_actives() == []
+    assert contx.get_predicted() == ["upper"]
+
+    assert layer.predict(["A", "B"]) == ["C"]
+    assert contx.get_all_actives() == []
+    assert contx.get_predicted() == ["upper"]
+    
+    context = "lower"
+    sequence = ["A","b","c"]
+    cumulative = []
+    for letter in sequence:
+        cumulative.append(letter)
+        layer.predict(cumulative)
+        contx.predict([context])
+        lact = layer.get_active_neurons()
+        cact = contx.get_active_neurons()
+        for cn in cact:
+            for ln in lact:
+                cn.add_upstream(ln)
+                ln.add_upstream(cn)
+
+    pred_layer = layer.predict(["A"])
+    assert pred_layer == ["B","b"]
+    layer.show_status()
+    assert contx.get_all_actives() == []
+    assert contx.get_predicted() == ["upper", "lower"]
+    contx.predict("lower")
+    pred_layer2 = layer.get_predicted()
+
+    layer.show_status()
+    contx.show_status()
+    final_prediction = list(set(pred_layer) & set(pred_layer2))
+    assert final_prediction == ["b"]
 
 
-    print("################")
-    corepred, hypopred = brain.predict("violin is")
-    brain.hypo.show_status()
-    brain.cortex.show_status()
-    assert corepred == ['instrument']
-    assert hypopred == ['music']
-    corepred, hypopred = brain.predict("bass is")
-    #brain.hypo.show_status()
-    #brain.cortex.show_status()
-    print("THE corepred:  ", corepred)
-    print("THE hypopred:  ", hypopred)
-    assert corepred == ['instrument', 'fish']
-    assert hypopred == ['about','music','fishing']
-    raise
+    # assert layer.predict(["A", "b"]) == ["C", "c"]
+    # assert contx.get_all_actives() == []
+    # assert contx.get_predicted() == ["upper", "lower"]
+# def test_brain_train_basic():
+#     brain = Brain()
+#     brain.train_from_file('data/disambiguation.txt')
+#     brain.hypo.reset()
+#     brain.hypo.show_status()
+#     brain.cortex.reset()
+#     brain.cortex.predict("violin")
+#     brain.hypo.show_status()
+#     pews = brain.hypo.get_predicted_neurons()
+#     for p in pews:
+#         print("@@@@@@hypo pred neurons", p)
+
+
+#     print("################")
+#     corepred, hypopred = brain.predict("violin is")
+#     brain.hypo.show_status()
+#     brain.cortex.show_status()
+#     assert corepred == ['instrument']
+#     assert hypopred == ['music']
+#     corepred, hypopred = brain.predict("bass is")
+#     #brain.hypo.show_status()
+#     #brain.cortex.show_status()
+#     print("THE corepred:  ", corepred)
+#     print("THE hypopred:  ", hypopred)
+#     assert corepred == ['instrument', 'fish']
+#     assert hypopred == ['about','music','fishing']
+#     raise

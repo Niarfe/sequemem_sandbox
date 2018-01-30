@@ -33,8 +33,9 @@ class Neuron:
         elif self.state == 'P':
             pass
         elif self.state == 'A':
+            self.state = 'I'
             for neuron in self.ns_upstream:
-                neuron.set_inactive()
+                    neuron.set_inactive()
 
         self.state = 'I'
 
