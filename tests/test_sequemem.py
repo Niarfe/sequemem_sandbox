@@ -169,33 +169,55 @@ def test_multiple_inputs():
     assert final_prediction == ["b"]
 
 
-    # assert layer.predict(["A", "b"]) == ["C", "c"]
-    # assert contx.get_all_actives() == []
-    # assert contx.get_predicted() == ["upper", "lower"]
-# def test_brain_train_basic():
-#     brain = Brain()
-#     brain.train_from_file('data/disambiguation.txt')
-#     brain.hypo.reset()
-#     brain.hypo.show_status()
-#     brain.cortex.reset()
-#     brain.cortex.predict("violin")
-#     brain.hypo.show_status()
-#     pews = brain.hypo.get_predicted_neurons()
-#     for p in pews:
-#         print("@@@@@@hypo pred neurons", p)
+def test_classic_bass_example():
+    layer = Layer()
+    contx = Layer()
 
+    context = "music"
+    sequence = ["bass","is","instrument"]
+    cumulative = []
+    for letter in sequence:
+        cumulative.append(letter)
+        layer.predict(cumulative)
+        contx.predict([context])
+        lact = layer.get_active_neurons()
+        cact = contx.get_active_neurons()
+        for cn in cact:
+            for ln in lact:
+                cn.add_upstream(ln)
+                ln.add_upstream(cn)
 
-#     print("################")
-#     corepred, hypopred = brain.predict("violin is")
-#     brain.hypo.show_status()
-#     brain.cortex.show_status()
-#     assert corepred == ['instrument']
-#     assert hypopred == ['music']
-#     corepred, hypopred = brain.predict("bass is")
-#     #brain.hypo.show_status()
-#     #brain.cortex.show_status()
-#     print("THE corepred:  ", corepred)
-#     print("THE hypopred:  ", hypopred)
-#     assert corepred == ['instrument', 'fish']
-#     assert hypopred == ['about','music','fishing']
-#     raise
+    assert layer.predict(["bass"]) == ["is"]
+    assert contx.get_all_actives() == []
+    assert contx.get_predicted() == ["music"]
+
+    assert layer.predict(["bass", "is"]) == ["instrument"]
+    assert contx.get_all_actives() == []
+    assert contx.get_predicted() == ["music"]
+    
+    context = "fishing"
+    sequence = ["bass","is","fish"]
+    cumulative = []
+    for letter in sequence:
+        cumulative.append(letter)
+        layer.predict(cumulative)
+        contx.predict([context])
+        lact = layer.get_active_neurons()
+        cact = contx.get_active_neurons()
+        for cn in cact:
+            for ln in lact:
+                cn.add_upstream(ln)
+                ln.add_upstream(cn)
+
+    pred_layer = layer.predict(["bass","is"])
+    assert pred_layer == ["instrument", "fish"]
+    layer.show_status()
+    assert contx.get_all_actives() == []
+    assert contx.get_predicted() == ["music", "fishing"]
+    contx.predict("fishing")
+    pred_layer2 = layer.get_predicted()
+
+    layer.show_status()
+    contx.show_status()
+    final_prediction = list(set(pred_layer) & set(pred_layer2))
+    assert final_prediction == ["fish"]
