@@ -226,6 +226,6 @@ def test_classic_bass_example():
 def test_brain_train():
     brain = Brain()
     brain.train_from_file('data/disambiguation.txt')
-    prediction = brain.predict(["bass", "is"])
+    prediction = brain.predict(["bass", "is"], "music")
     print(prediction)
     assert prediction  == ["instrument"], prediction
