@@ -78,6 +78,25 @@ def test_several_sentences():
     res = layer.predict([ random_choice ] + ["eat"])
     print("Well pick this guy and see what he/she eats: ",res)
 
+def test_full_tri_gate():
+    layer = Layer()
+    layer.train_from_file('data/logic_gates_no_about.txt')
+    neuron_count = 0
+    for key, lst in layer.columns.items():
+        print(type(key))
+        neuron_count += len(lst)
+    layer.show_status()
+    assert neuron_count == 13
+
+def test_sequence_layer():
+    layer = Layer()
+    layer.train_from_file('data/logic_gates_no_about.txt')
+    layer.reset()
+    layer.show_status()
+    prediction = layer.predict(["0","1"])
+    layer.show_status()
+    assert prediction == ["0","1"]
+
 def test_prep_prediction_new():
     layer = Layer()
     layer.train_from_file('data/cortical_example1.1.txt')
@@ -229,3 +248,11 @@ def test_brain_train():
     prediction = brain.predict(["bass", "is"], "music")
     print(prediction)
     assert prediction  == ["instrument"], prediction
+
+def test_logic_gates_with_brain():
+    brain = Brain()
+    brain.train_from_file('data/logic_gates.txt')
+    prediction = brain.predict(["0", "1"], "or")
+    print(prediction)
+#    brain.show_status()
+    assert prediction  == ["1"], prediction
