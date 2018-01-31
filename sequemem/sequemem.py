@@ -78,15 +78,14 @@ class Layer:
         return self.predict("{} is".format(word))
 
     def predict(self, sequence):
-        print("layer caleld to predict on: ", sequence)
+
         self.reset()
         if type(sequence) == type(""):
             sequence = self.tokenize(sequence)
 
         for input in sequence:
             self.hit(str(input))
-        print("PREDICT")
-        self.show_status()
+
         return list(self.get_predicted())
 
     def full_reset(self):
@@ -99,8 +98,7 @@ class Layer:
             for neuron in neurons:
                 neuron.set_inactive()
         self.activation_neuron.set_active()
-        print("RESET")
-        self.show_status()
+
 
     def hit(self, column_key):
         npred = self._column_get('P', column_key)
@@ -193,7 +191,6 @@ class Brain:
             for sentence in source:
                 tokens = self.tokenize(sentence)
                 if tokens[0] == 'about':
-                    print("Setting Context to", tokens[1])
                     self.current_context = tokens[1]
                 else:
                     cumulative = []
@@ -217,7 +214,6 @@ class Brain:
         self.contx.full_reset()
 
         self.current_context = "neutral" if not context else context
-        print("#####")
         self.layer.predict(sentence)
         act_layer = self.layer.get_active_neurons()
         pred_layer = self.layer.get_predicted_neurons()
@@ -228,14 +224,12 @@ class Brain:
         pred_layer2 = self.layer.get_predicted_neurons()
         self.layer.show_status()
         final_preds = list(set(pred_layer) & set(pred_layer2))
-        print("Final pred count ", len(final_preds))
+
         self.layer.full_reset()
         self.layer.show_status()
         for active in act_layer:
-            print('set one A')
             active.set_hard_state('A')
         for pred in final_preds:
-            print('set one P')
             pred.set_hard_state('P')
         self.layer.show_status()
         return self.layer.get_predicted()
