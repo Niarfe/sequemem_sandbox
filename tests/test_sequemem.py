@@ -95,7 +95,7 @@ def test_sequence_layer():
     layer.show_status()
     prediction = layer.predict(["0","1"])
     layer.show_status()
-    assert prediction == ["0","1"]
+    assert sorted(prediction) == ["0","1"]
 
 def test_prep_prediction_new():
     layer = Layer()

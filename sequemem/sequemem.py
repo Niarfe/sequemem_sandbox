@@ -7,16 +7,16 @@ class Neuron:
         self.ns_upstream = []
 
     def set_active(self):
-        if self.state == 'A':
-            return
-        elif self.state == 'I' or self.state == 'P':
+        if self.state == 'A' or self.state == 'I' or self.state == 'P':
             for neuron in self.ns_downstream:
                 neuron.set_inactive()
             for neuron in self.ns_upstream:
-                print("Setting upstreams to predict")
                 neuron.set_predict()
 
         self.state = 'A'
+
+    def set_hard_state(self, state):
+        self.state = state
 
     def set_predict(self):
         if self.state == 'P':
@@ -63,7 +63,7 @@ class Layer:
         self.activation_neuron = Neuron()
 
     def tokenize(self, sentence):
-        return [word.strip('\t\n\r .') for word in sentence.split(' ')]
+        return [str(word.strip('\t\n\r .')) for word in sentence.split(' ')]
 
     def train_from_file(self, filepath):
         with open(filepath,'r') as source:
@@ -84,7 +84,9 @@ class Layer:
             sequence = self.tokenize(sequence)
 
         for input in sequence:
-            self.hit(input)
+            self.hit(str(input))
+        print("PREDICT")
+        self.show_status()
         return list(self.get_predicted())
 
     def full_reset(self):
@@ -97,6 +99,8 @@ class Layer:
             for neuron in neurons:
                 neuron.set_inactive()
         self.activation_neuron.set_active()
+        print("RESET")
+        self.show_status()
 
     def hit(self, column_key):
         npred = self._column_get('P', column_key)
@@ -130,19 +134,21 @@ class Layer:
             ]
 
     def get_predicted(self):
-        if self.is_learning:
-            return self.columns.keys()
+        predicted = [k
+            for k in self.columns.keys()
+            if len(self._column_get('P', k)) > 0
+            ]
+        if len(predicted) > 0:
+            return predicted
         else:
-            return [k
-                for k in self.columns.keys()
-                if self._column_get('P', k)
-                ]
+            return self.columns.keys()
+
 
     def column_keys(self):
         return [key for key in self.columns.keys()]
 
     def show_status(self):
-        print("LAYER STATUS:")
+        print("LAYER STATUS:", self.activation_neuron.state)
         for key, neurons in self.columns.items():
             print(
                 "{}:\t{}".format(
@@ -159,6 +165,7 @@ class Layer:
         return self._get_neurons('A')
     def get_predicted_neurons(self):
         return self._get_neurons('P')
+
 
 
 class Logic:
@@ -185,7 +192,6 @@ class Brain:
         with open(filepath,'r') as source:
             for sentence in source:
                 tokens = self.tokenize(sentence)
-                print(tokens)
                 if tokens[0] == 'about':
                     print("Setting Context to", tokens[1])
                     self.current_context = tokens[1]
@@ -212,17 +218,27 @@ class Brain:
 
         self.current_context = "neutral" if not context else context
         print("#####")
-        self.show_status()
-        print("    SENTENCE: ", sentence)
-        pred_layer = self.layer.predict(sentence)
-        print("    layer predicted: ", pred_layer) 
-        self.show_status()
-        
+        self.layer.predict(sentence)
+        act_layer = self.layer.get_active_neurons()
+        pred_layer = self.layer.get_predicted_neurons()
+
+        self.layer.reset()
+        self.layer.show_status()
         self.contx.predict(self.current_context)
-        
-        self.show_status()
-        pred_layer2 = self.layer.get_predicted()
-        return list(set(pred_layer) & set(pred_layer2))
+        pred_layer2 = self.layer.get_predicted_neurons()
+        self.layer.show_status()
+        final_preds = list(set(pred_layer) & set(pred_layer2))
+        print("Final pred count ", len(final_preds))
+        self.layer.full_reset()
+        self.layer.show_status()
+        for active in act_layer:
+            print('set one A')
+            active.set_hard_state('A')
+        for pred in final_preds:
+            print('set one P')
+            pred.set_hard_state('P')
+        self.layer.show_status()
+        return self.layer.get_predicted()
 
     def show_status(self):
         print("")
