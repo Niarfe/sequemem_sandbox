@@ -78,6 +78,25 @@ def test_several_sentences():
     res = layer.predict([ random_choice ] + ["eat"])
     print("Well pick this guy and see what he/she eats: ",res)
 
+def test_full_tri_gate():
+    layer = Layer()
+    layer.train_from_file('data/logic_gates_no_about.txt')
+    neuron_count = 0
+    for key, lst in layer.columns.items():
+        print(type(key))
+        neuron_count += len(lst)
+    layer.show_status()
+    assert neuron_count == 13
+
+def test_sequence_layer():
+    layer = Layer()
+    layer.train_from_file('data/logic_gates_no_about.txt')
+    layer.reset()
+    layer.show_status()
+    prediction = layer.predict(["0","1"])
+    layer.show_status()
+    assert sorted(prediction) == ["0","1"]
+
 def test_prep_prediction_new():
     layer = Layer()
     layer.train_from_file('data/cortical_example1.1.txt')
@@ -229,3 +248,37 @@ def test_brain_train():
     prediction = brain.predict(["bass", "is"], "music")
     print(prediction)
     assert prediction  == ["instrument"], prediction
+
+def test_logic_gates_with_brain():
+    brain = Brain()
+    brain.train_from_file('data/logic_gates.txt')
+    prediction = brain.predict(["0", "1"], "or")
+    print(prediction)
+#    brain.show_status()
+    assert prediction  == ["1"], prediction
+
+def test_logic_gates_with_brain_full_monte():
+    brain = Brain()
+    brain.train_from_file('data/logic_gates.txt')
+    assert brain.predict(["1", "1"], "and") == ["1"]
+    assert brain.predict(["1", "0"], "and") == ["0"]
+    assert brain.predict(["0", "1"], "and") == ["0"]
+    assert brain.predict(["0", "0"], "and") == ["0"]
+    assert brain.predict(["1", "1"], "or") == ["1"]
+    assert brain.predict(["1", "0"], "or") == ["1"]
+    assert brain.predict(["0", "1"], "or") == ["1"]
+    assert brain.predict(["0", "0"], "or") == ["0"]
+    assert brain.predict(["1", "1"], "xor") == ["0"]
+    assert brain.predict(["1", "0"], "xor") == ["1"]
+    assert brain.predict(["0", "1"], "xor") == ["1"]
+    assert brain.predict(["0", "0"], "xor") == ["0"]
+
+def test_triple_context():
+    brain = Brain()
+    brain.train_from_file('data/long_context_test.txt')
+    assert brain.predict(["bass", "is"], "music") == ["instrument"]
+    assert brain.predict(["viola", "is"], "music") == ["instrument"]
+    assert brain.predict(["bass", "is"], "fishing") == ["fish"]
+    assert brain.predict(["viola", "is"], "names") == ["name"]
+    assert brain.predict(["salmon", "is"], "fishing") == ["fish"]
+    assert brain.predict(["efrain", "is"], "names") == ["name"]

@@ -1,0 +1,10 @@
+about music
+violin is instrument
+bass is instrument
+viola is instrument
+about fishing
+salmon is fish
+bass is fish
+about names
+efrain is name
+viola is name

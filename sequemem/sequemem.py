@@ -7,9 +7,7 @@ class Neuron:
         self.ns_upstream = []
 
     def set_active(self):
-        if self.state == 'A':
-            return
-        elif self.state == 'I' or self.state == 'P':
+        if self.state == 'A' or self.state == 'I' or self.state == 'P':
             for neuron in self.ns_downstream:
                 neuron.set_inactive()
             for neuron in self.ns_upstream:
@@ -17,13 +15,16 @@ class Neuron:
 
         self.state = 'A'
 
+    def set_hard_state(self, state):
+        self.state = state
+
     def set_predict(self):
         if self.state == 'P':
             return
         elif self.state == 'A':
             raise "active neuron can't be set to predict"
         elif self.state == 'I':
-            pass
+            self.state = 'P'
 
         self.state = 'P'
 
@@ -62,7 +63,7 @@ class Layer:
         self.activation_neuron = Neuron()
 
     def tokenize(self, sentence):
-        return [word.strip('\t\n\r .') for word in sentence.split(' ')]
+        return [str(word.strip('\t\n\r .')) for word in sentence.split(' ')]
 
     def train_from_file(self, filepath):
         with open(filepath,'r') as source:
@@ -77,13 +78,24 @@ class Layer:
         return self.predict("{} is".format(word))
 
     def predict(self, sequence):
+
         self.reset()
         if type(sequence) == type(""):
             sequence = self.tokenize(sequence)
 
         for input in sequence:
-            self.hit(input)
+            self.hit(str(input))
+
         return list(self.get_predicted())
+
+    def full_reset(self):
+        for key, neurons in self.columns.items():
+            for neuron in neurons:
+                neuron.set_inactive()
+
+    def light_column(self, key):
+        for neuron in self.columns[key]:
+            neuron.set_active()
 
 
     def reset(self):
@@ -91,6 +103,7 @@ class Layer:
             for neuron in neurons:
                 neuron.set_inactive()
         self.activation_neuron.set_active()
+
 
     def hit(self, column_key):
         npred = self._column_get('P', column_key)
@@ -124,19 +137,21 @@ class Layer:
             ]
 
     def get_predicted(self):
-        if self.is_learning:
-            return self.columns.keys()
+        predicted = [k
+            for k in self.columns.keys()
+            if len(self._column_get('P', k)) > 0
+            ]
+        if len(predicted) > 0:
+            return predicted
         else:
-            return [k
-                for k in self.columns.keys()
-                if self._column_get('P', k)
-                ]
+            return self.columns.keys()
+
 
     def column_keys(self):
         return [key for key in self.columns.keys()]
 
     def show_status(self):
-        print("LAYER STATUS:")
+        print("LAYER STATUS:", self.activation_neuron.state)
         for key, neurons in self.columns.items():
             print(
                 "{}:\t{}".format(
@@ -153,6 +168,7 @@ class Layer:
         return self._get_neurons('A')
     def get_predicted_neurons(self):
         return self._get_neurons('P')
+
 
 
 class Logic:
@@ -174,8 +190,6 @@ class Brain:
             self.contx
         ]
         self.current_context = None
-        self.current_context_neuron = None
-        self.active_context_sentence = None
 
     def train_from_file(self, filepath):
         with open(filepath,'r') as source:
@@ -183,14 +197,13 @@ class Brain:
                 tokens = self.tokenize(sentence)
                 if tokens[0] == 'about':
                     self.current_context = tokens[1]
-                    self.active_context_sentence = sentence
                 else:
                     cumulative = []
-                    for word in self.tokenize(sentence):
+                    for word in tokens:
                         cumulative.append(word)
                         self.layer.predict(cumulative)
-                        self.contx.predict([self.current_context])
                         lact = self.layer.get_active_neurons()
+                        self.contx.predict([self.current_context])
                         cact = self.contx.get_active_neurons()
                         for cn in cact:
                             for ln in lact:
@@ -202,8 +215,34 @@ class Brain:
         return [word.strip('\t\n\r .') for word in sentence.split(' ')]
 
     def predict(self, sentence, context=None):
-        pred_layer = self.layer.predict(sentence)
-        context = "neutral" if not context else context
-        self.contx.predict(context)
-        pred_layer2 = self.layer.get_predicted()
-        return list(set(pred_layer) & set(pred_layer2))
+        self.layer.reset()
+        self.contx.full_reset()
+
+        self.current_context = "neutral" if not context else context
+        self.layer.predict(sentence)
+        act_layer = self.layer.get_active_neurons()
+        pred_layer = self.layer.get_predicted_neurons()
+
+        self.layer.reset()
+        self.layer.show_status()
+        self.contx.predict(self.current_context)
+        pred_layer2 = self.layer.get_predicted_neurons()
+        self.layer.show_status()
+        final_preds = list(set(pred_layer) & set(pred_layer2))
+
+        self.layer.full_reset()
+        self.layer.show_status()
+        for active in act_layer:
+            active.set_hard_state('A')
+        for pred in final_preds:
+            pred.set_hard_state('P')
+        self.layer.show_status()
+        return self.layer.get_predicted()
+
+    def show_status(self):
+        print("")
+        print("Context: ", self.current_context)
+        print("CONTEXT: ")
+        self.contx.show_status()
+        print("LAYER: ")
+        self.layer.show_status()
