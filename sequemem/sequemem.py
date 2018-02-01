@@ -93,6 +93,11 @@ class Layer:
             for neuron in neurons:
                 neuron.set_inactive()
 
+    def light_column(self, key):
+        for neuron in self.columns[key]:
+            neuron.set_active()
+
+
     def reset(self):
         for key, neurons in self.columns.items():
             for neuron in neurons:
