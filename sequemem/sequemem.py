@@ -88,6 +88,33 @@ class Layer:
 
         return list(self.get_predicted())
 
+    def initialize_with_single_column_lit(self, word):
+        assert type(sentence) != type(""), "Input to predict with light column is single word"
+        self.full_reset()
+        self.light_column(word)
+        actives = self.get_active_neurons()
+        predicted = self.get_predicted()
+        return active, predicted
+
+# clear all, set to set_inactive
+# if column has no predicted, set them all active, otherwise activate only the one.
+# gather predicted and return values
+# next word, hit column, if predicted hit save it, clear again, and set it active.
+# gather predicted and return values
+# next word, hit column, if predicted hit save it, clear again, and set it active.
+
+
+    def predict_clear_then_light_column_on_sentence(self, sentence):
+        if type(sentence) == type(""):
+            sentence = self.tokenize(sentence)
+        # FORGET UPDATE PREDICT
+        self.full_reset()       # Forget
+        self.light_column(word)
+        predicted = self.get_predicted()
+
+
+
+
     def full_reset(self):
         for key, neurons in self.columns.items():
             for neuron in neurons:
