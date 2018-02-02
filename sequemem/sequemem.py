@@ -59,7 +59,7 @@ from collections import defaultdict
 class Layer:
     def __init__(self):
         self.columns = defaultdict(list)
-        self.is_learning = False
+        self.panic_neuron = Neuron()
         self.activation_neuron = Neuron()
 
     def tokenize(self, sentence):
@@ -78,7 +78,6 @@ class Layer:
         return self.predict("{} is".format(word))
 
     def predict(self, sequence):
-
         self.reset()
         if type(sequence) == type(""):
             sequence = self.tokenize(sequence)
@@ -96,13 +95,6 @@ class Layer:
         predicted = self.get_predicted()
         return active, predicted
 
-# clear all, set to set_inactive
-# if column has no predicted, set them all active, otherwise activate only the one.
-# gather predicted and return values
-# next word, hit column, if predicted hit save it, clear again, and set it active.
-# gather predicted and return values
-# next word, hit column, if predicted hit save it, clear again, and set it active.
-
 
     def predict_clear_then_light_column_on_sentence(self, sentence):
         if type(sentence) == type(""):
@@ -111,9 +103,6 @@ class Layer:
         self.full_reset()       # Forget
         self.light_column(word)
         predicted = self.get_predicted()
-
-
-
 
     def full_reset(self):
         for key, neurons in self.columns.items():
@@ -125,29 +114,46 @@ class Layer:
             neuron.set_active()
 
 
-    def reset(self):
+    def reset_old(self):
         for key, neurons in self.columns.items():
             for neuron in neurons:
                 neuron.set_inactive()
         self.activation_neuron.set_active()
 
+    def reset(self):
+        self.full_reset()
+        self.activation_neuron.set_active()
+        for _, neurons in self.columns.items():
+            for neuron in neurons:
+                neuron.set_predict()
 
     def hit(self, column_key):
-        npred = self._column_get('P', column_key)
-        if len(npred) > 0:
-            for neuron in npred:
-                neuron.set_active()
-            self.is_learning = False
+        # Gather neurons that will be set active
+        prd_nrns = self._column_get('P', column_key)
+        act_nrns = self.get_all_actives()
+        
+        # FORGET
+        self.full_reset()
+        
+        # UPDATE
+        if len(prd_nrns) > 0:
+            self.panic_neuron.set_inactive()
+            # UPDATE set previous chosen predicts to active
+            for prd_nrn in prd_nrns:
+                prd_nrn.set_active()
         else:
-            neuron = Neuron()
-            actives = self.get_all_actives()
-            for active in actives:
-                active.add_upstream(neuron)
-            self.columns[column_key].append(neuron)
-            neuron.set_active()
-            self.is_learning = True
+            self.panic_neuron.set_inactive()
+            nw_nrn = Neuron()
+            for act_nrn in act_nrns:
+                act_nrn.add_upstream(nw_nrn)
+            self.columns[column_key].append(nw_nrn)
+            nw_nrn.set_active()
+            
 
     def get_all_actives(self):
+        """Get ALL active neurons, even if it's the activation neuron.
+            The other function gets all actives in columns only.
+        """
         actives = []
         if self.activation_neuron.state == 'A':
             actives.append(self.activation_neuron)
