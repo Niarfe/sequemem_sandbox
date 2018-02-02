@@ -276,7 +276,7 @@ def test_logic_gates_with_brain_full_monte():
 def test_triple_context():
     brain = Brain()
     brain.train_from_file('data/long_context_test.txt')
-    assert brain.predict(["bass", "is"]`, "music") == ["instrument"]
+    assert brain.predict(["bass", "is"], "music") == ["instrument"]
     assert brain.predict(["viola", "is"], "music") == ["instrument"]
     assert brain.predict(["bass", "is"], "fishing") == ["fish"]
     assert brain.predict(["viola", "is"], "names") == ["name"]
