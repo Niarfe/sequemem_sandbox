@@ -282,3 +282,18 @@ def test_triple_context():
     assert brain.predict(["viola", "is"], "names") == ["name"]
     assert brain.predict(["salmon", "is"], "fishing") == ["fish"]
     assert brain.predict(["efrain", "is"], "names") == ["name"]
+
+def test_async_memory():
+    layer = Layer()
+    layer.train_from_file('data/sent_cats_of_ulthar')
+
+    sentence = ["uttered"]
+    prediction = [""]
+    while True:
+        prediction = layer.predict(sentence, True)
+        print(prediction)
+        if len(prediction) == 1:
+            sentence.extend(prediction)
+        else:
+            break
+    assert " ".join(sentence) == "uttered his petition there seemed to form overhead the shadowy nebulous figures of exotic things of hybrid creatures crowned with horn flanked discs"

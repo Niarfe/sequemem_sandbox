@@ -77,8 +77,11 @@ class Layer:
             word = word[0]
         return self.predict("{} is".format(word))
 
-    def predict(self, sequence):
-        self.reset()
+    def predict(self, sequence, any_match=False):
+        if any_match:
+            self.reset_any_match()
+        else:
+            self.reset()
         if type(sequence) == type(""):
             sequence = self.tokenize(sequence)
 
@@ -114,27 +117,31 @@ class Layer:
             neuron.set_active()
 
 
-    def reset_old(self):
+    def reset(self):
         for key, neurons in self.columns.items():
             for neuron in neurons:
                 neuron.set_inactive()
         self.activation_neuron.set_active()
 
-    def reset(self):
+    def reset_any_match(self):
         self.full_reset()
         self.activation_neuron.set_active()
-        for _, neurons in self.columns.items():
-            for neuron in neurons:
-                neuron.set_predict()
+        for _, col_neurons in self.columns.items():
+            for col_neuron in col_neurons:
+                down_neuron = next((nrn for nrn in col_neuron.ns_downstream if nrn in col_neurons), None)
+                if down_neuron:
+                    continue
+                else:
+                    col_neuron.set_predict()
 
     def hit(self, column_key):
         # Gather neurons that will be set active
         prd_nrns = self._column_get('P', column_key)
         act_nrns = self.get_all_actives()
-        
+
         # FORGET
         self.full_reset()
-        
+
         # UPDATE
         if len(prd_nrns) > 0:
             self.panic_neuron.set_inactive()
@@ -148,7 +155,7 @@ class Layer:
                 act_nrn.add_upstream(nw_nrn)
             self.columns[column_key].append(nw_nrn)
             nw_nrn.set_active()
-            
+
 
     def get_all_actives(self):
         """Get ALL active neurons, even if it's the activation neuron.
