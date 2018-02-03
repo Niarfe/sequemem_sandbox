@@ -48,11 +48,7 @@ class Neuron:
         self.ns_downstream.append(neuron)
 
     def is_unused(self):
-        ups = len(self.ns_upstream)
-        downs = len(self.ns_downstream)
-        if (ups == 0 and downs == 0):
-            return True
-        return False
+        return not self.ns_upstream and not self.ns_downstream
 
 from collections import defaultdict
 
