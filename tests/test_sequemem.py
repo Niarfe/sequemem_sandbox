@@ -283,6 +283,27 @@ def test_triple_context():
     assert brain.predict(["salmon", "is"], "fishing") == ["fish"]
     assert brain.predict(["efrain", "is"], "names") == ["name"]
 
+import os
+def test_act_in_response():
+    inp_layer = Layer()
+    act_layer = Layer()
+
+    insentence = "hello tex"
+    response = "hi_this_is_the_expected_response"
+
+    inp_layer.predict(insentence)
+    inp_active = inp_layer.get_active_neurons()
+
+    act_layer.predict(response)
+    act_active = act_layer.get_active_neurons()
+    inp_active[0].add_upstream(act_active[0])
+
+    inp_layer.predict(insentence)
+    reflex = act_layer.get_predicted()
+
+    os.system("say {}".format(reflex[0].split('_')))
+    assert reflex[0] == response
+
 def test_async_memory():
     layer = Layer()
     layer.train_from_file('data/sent_cats_of_ulthar')
@@ -297,3 +318,6 @@ def test_async_memory():
         else:
             break
     assert " ".join(sentence) == "uttered his petition there seemed to form overhead the shadowy nebulous figures of exotic things of hybrid creatures crowned with horn flanked discs"
+
+
+
