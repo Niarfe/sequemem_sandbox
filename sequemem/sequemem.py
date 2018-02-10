@@ -59,7 +59,7 @@ class Layer:
         self.activation_neuron = Neuron()
 
     def tokenize(self, sentence):
-        return [str(word.strip('\t\n\r .')) for word in sentence.split(' ')]
+        return [str(word.strip().strip('\r\n\t.')) for word in sentence.strip().split(' ')]
 
     def train_from_file(self, filepath):
         with open(filepath,'r') as source:
