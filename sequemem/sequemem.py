@@ -53,11 +53,16 @@ class Neuron:
 from collections import defaultdict
 
 class Layer:
-    def __init__(self):
+    def __init__(self, name="anon"):
         self.columns = defaultdict(list)
         self.panic_neuron = Neuron()
         self.activation_neuron = Neuron()
         self.is_learning = True
+        self.upstream_layers = []
+        self.name = name
+
+    def add_upstream(self, layer):
+        self.upstream_layers.append(layer)
 
     def set_learning(self, bool_state):
         self.is_learning = bool_state
@@ -90,7 +95,12 @@ class Layer:
         for input in sequence:
             self.hit(str(input))
 
-        return list(self.get_predicted())
+        prediction = list(self.get_predicted())
+        for layer in self.upstream_layers:
+            print(self.name, " got ", sequence, "and hitting upward with ", prediction)
+            layer.predict(prediction)
+
+        return list(prediction)
 
     def initialize_with_single_column_lit(self, word):
         assert type(sentence) != type(""), "Input to predict with light column is single word"
@@ -152,7 +162,9 @@ class Layer:
                 prd_nrn.set_active()
         else:
             if not self.is_learning:
+                print("{} hit witn {} returning".format(self.name, column_key))
                 return
+            print("{} adding {} neuron".format(self.name, column_key))
             self.panic_neuron.set_inactive()
             nw_nrn = Neuron()
             for act_nrn in act_nrns:
@@ -175,6 +187,8 @@ class Layer:
 
 
     def _column_get(self, state, column_key):
+        if not self.is_learning:
+            return []
         return [neuron
             for neuron in self.columns[column_key]
             if neuron.state == state
@@ -196,7 +210,7 @@ class Layer:
         return [key for key in self.columns.keys()]
 
     def show_status(self):
-        print("LAYER STATUS:", self.activation_neuron.state)
+        print("STATUS {}: ".format(self.name), self.activation_neuron.state)
         for key, neurons in self.columns.items():
             print(
                 "{}:\t{}".format(

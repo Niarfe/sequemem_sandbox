@@ -8,14 +8,53 @@ def tokenize(sentence):
 def test_tokenize():
     assert tokenize("we are") == ["we", "are"]
 
+
+def test_ccn_layer():
+    input_layer = Layer("input")
+    conv_verb = Layer("verb")
+    conv_agent = Layer("agent")
+    conv_noun = Layer("noun")
+    conv_agent_verb_noun = Layer("avn")
+
+    conv_verb.predict("ate <verb>")
+    conv_noun.predict("pizza <noun>")
+    conv_agent.predict("Robby <agent>")
+    CONV_LAYER = [conv_agent, conv_verb, conv_noun]
+    for layer in CONV_LAYER:
+        layer.set_learning(False)
+
+
+    conv_agent_verb_noun.predict("<agent> <verb> <noun> <avn>")
+    conv_agent_verb_noun.set_learning(False)
+
+
+    for layer in CONV_LAYER:
+        input_layer.add_upstream(layer)
+        layer.add_upstream(conv_agent_verb_noun)
+
+    for layer in CONV_LAYER:
+        layer.reset()
+    conv_agent_verb_noun.reset()
+
+    input_layer.predict("Robby ate pizza")
+    print("TRAINING DONE")
+    input_layer.predict("Robby ate")
+    print(conv_noun.predict("pizza"))
+    conv_agent_verb_noun.set_learning(True)
+    print(conv_agent_verb_noun.predict("<agent> <verb> <noun>"))
+
+
+    for layer in CONV_LAYER:
+        layer.show_status()
+    conv_agent_verb_noun.show_status()
+    assert False
+
 def test_layer_inactive():
     layer = Layer()
+    layer.predict("test")
     layer.set_learning(False)
 
     layer.predict("test one two")
-    layer.predict("test one two")
-    layer.predict("test one two")
-
     layer.show_status()
     assert layer.predict("test") == []
 
