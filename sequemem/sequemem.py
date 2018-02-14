@@ -57,6 +57,12 @@ class Layer:
         self.columns = defaultdict(list)
         self.panic_neuron = Neuron()
         self.activation_neuron = Neuron()
+        self.is_learning = True
+
+    def set_learning(self, bool_state):
+        self.is_learning = bool_state
+        self.activation_neuron.set_inactive()
+        self.panic_neuron.set_inactive()
 
     def tokenize(self, sentence):
         return [str(word.strip().strip('\r\n\t.')) for word in sentence.strip().split(' ')]
@@ -145,6 +151,8 @@ class Layer:
             for prd_nrn in prd_nrns:
                 prd_nrn.set_active()
         else:
+            if not self.is_learning:
+                return
             self.panic_neuron.set_inactive()
             nw_nrn = Neuron()
             for act_nrn in act_nrns:
@@ -180,7 +188,8 @@ class Layer:
         if len(predicted) > 0:
             return predicted
         else:
-            return self.columns.keys()
+            return []
+            #return self.columns.keys()
 
 
     def column_keys(self):

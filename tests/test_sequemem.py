@@ -8,6 +8,16 @@ def tokenize(sentence):
 def test_tokenize():
     assert tokenize("we are") == ["we", "are"]
 
+def test_layer_inactive():
+    layer = Layer()
+    layer.set_learning(False)
+
+    layer.predict("test one two")
+    layer.predict("test one two")
+    layer.predict("test one two")
+
+    layer.show_status()
+    assert layer.predict("test") == []
 
 def test_layer_create():
     layer = Layer()
@@ -16,7 +26,7 @@ def test_layer_create():
     layer.show_status()
     assert len(layer.columns["this"]) == 1
     assert layer.column_keys() == ["this"]
-    assert prediction == ["this"]
+    assert prediction == []
 
 
 def test_layer_create_two_words():
@@ -24,7 +34,7 @@ def test_layer_create_two_words():
     assert layer.column_keys() == []
     prediction = layer.predict(["are","we"])
     assert sorted(layer.column_keys()) == sorted(["are","we"])
-    assert sorted(prediction) == sorted(["are","we"])
+    assert sorted(prediction) == sorted([])
 
 
 def test_layer_create_two_words_predict_one():
@@ -48,7 +58,7 @@ def test_layer_create_new_second_sequence():
     _ = layer.predict(["are","we","there"])
     prediction = layer.predict(["are","we","here"])
     layer.show_status()
-    assert sorted(prediction) == sorted(["are","here","there","we"])
+    assert sorted(prediction) == sorted([])
 
 
 def test_layer_create_two_words_predict_two():
@@ -283,41 +293,41 @@ def test_triple_context():
     assert brain.predict(["salmon", "is"], "fishing") == ["fish"]
     assert brain.predict(["efrain", "is"], "names") == ["name"]
 
-import os
-def test_act_in_response():
-    inp_layer = Layer()
-    act_layer = Layer()
+# import os
+# def test_act_in_response():
+#     inp_layer = Layer()
+#     act_layer = Layer()
 
-    insentence = "hello tex"
-    response = "hi_this_is_the_expected_response"
+#     insentence = "hello tex"
+#     response = "hi_this_is_the_expected_response"
 
-    inp_layer.predict(insentence)
-    inp_active = inp_layer.get_active_neurons()
+#     inp_layer.predict(insentence)
+#     inp_active = inp_layer.get_active_neurons()
 
-    act_layer.predict(response)
-    act_active = act_layer.get_active_neurons()
-    inp_active[0].add_upstream(act_active[0])
+#     act_layer.predict(response)
+#     act_active = act_layer.get_active_neurons()
+#     inp_active[0].add_upstream(act_active[0])
 
-    inp_layer.predict(insentence)
-    reflex = act_layer.get_predicted()
+#     inp_layer.predict(insentence)
+#     reflex = act_layer.get_predicted()
 
-    os.system("say {}".format(reflex[0].split('_')))
-    assert reflex[0] == response
+#     os.system("say {}".format(reflex[0].split('_')))
+#     assert reflex[0] == response
 
-def test_async_memory():
-    layer = Layer()
-    layer.train_from_file('data/sent_cats_of_ulthar')
+# def test_async_memory():
+#     layer = Layer()
+#     layer.train_from_file('data/sent_cats_of_ulthar')
 
-    sentence = ["uttered"]
-    prediction = [""]
-    while True:
-        prediction = layer.predict(sentence, True)
-        print(prediction)
-        if len(prediction) == 1:
-            sentence.extend(prediction)
-        else:
-            break
-    assert " ".join(sentence) == "uttered his petition there seemed to form overhead the shadowy nebulous figures of exotic things of hybrid creatures crowned with horn flanked discs"
+#     sentence = ["uttered"]
+#     prediction = [""]
+#     while True:
+#         prediction = layer.predict(sentence, True)
+#         print(prediction)
+#         if len(prediction) == 1:
+#             sentence.extend(prediction)
+#         else:
+#             break
+#     assert " ".join(sentence) == "uttered his petition there seemed to form overhead the shadowy nebulous figures of exotic things of hybrid creatures crowned with horn flanked discs"
 
 
 
