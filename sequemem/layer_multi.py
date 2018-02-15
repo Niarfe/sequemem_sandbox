@@ -1,6 +1,6 @@
 from collections import defaultdict
 from sequemem import *
-class Layer:
+class LayerMulti:
     def __init__(self, name="anon"):
         self.columns = defaultdict(list)
         self.panic_neuron = Neuron()
@@ -37,11 +37,12 @@ class Layer:
             self.reset_any_match()
         else:
             self.reset()
+
         if type(sequence) == type(""):
             sequence = self.tokenize(sequence)
-
+        print(sequence, "in predict")
         for input in sequence:
-            self.hit(str(input))
+            self.hit(input)
 
         prediction = list(self.get_predicted())
         for layer in self.upstream_layers:
@@ -49,6 +50,45 @@ class Layer:
             layer.predict(prediction)
 
         return list(prediction)
+
+
+    def hit(self, column_key):
+        column_keys = [column_key] if type(column_key) == type("") else column_key
+        assert type(column_keys) == type([])
+        print("in hit", column_keys)
+
+        is_new = False
+        pred_keys = self.get_predicted()
+        if set(pred_keys) != set(column_keys):
+            print("In if set...", pred_keys, column_keys)
+            is_new = True
+
+        act_nrns = self.get_all_actives()
+
+        def process_one_key(_key):
+            # Gather neurons that will be set active
+            prd_nrns = self._column_get('P', _key)
+
+            # UPDATE
+            if not is_new:
+                self.panic_neuron.set_inactive()
+                # UPDATE set previous chosen predicts to active
+                for prd_nrn in prd_nrns:
+                    prd_nrn.set_active()
+            else:
+                if not self.is_learning:
+                    return
+                self.panic_neuron.set_inactive()
+                nw_nrn = Neuron()
+                for act_nrn in act_nrns:
+                    act_nrn.add_upstream(nw_nrn)
+                print("about to add neuron to column {}".format(_key))
+                self.columns[_key].append(nw_nrn)
+                nw_nrn.set_active()
+
+        for key in column_keys:
+            process_one_key(key)
+
 
     def initialize_with_single_column_lit(self, word):
         assert type(sentence) != type(""), "Input to predict with light column is single word"
@@ -94,31 +134,6 @@ class Layer:
                 else:
                     col_neuron.set_predict()
 
-    def hit(self, column_key):
-        # Gather neurons that will be set active
-        prd_nrns = self._column_get('P', column_key)
-        act_nrns = self.get_all_actives()
-
-        # FORGET
-        self.full_reset()
-
-        # UPDATE
-        if len(prd_nrns) > 0:
-            self.panic_neuron.set_inactive()
-            # UPDATE set previous chosen predicts to active
-            for prd_nrn in prd_nrns:
-                prd_nrn.set_active()
-        else:
-            if not self.is_learning:
-                print("{} hit witn {} returning".format(self.name, column_key))
-                return
-            print("{} adding {} neuron".format(self.name, column_key))
-            self.panic_neuron.set_inactive()
-            nw_nrn = Neuron()
-            for act_nrn in act_nrns:
-                act_nrn.add_upstream(nw_nrn)
-            self.columns[column_key].append(nw_nrn)
-            nw_nrn.set_active()
 
 
     def get_all_actives(self):
@@ -135,6 +150,7 @@ class Layer:
 
 
     def _column_get(self, state, column_key):
+        assert type(column_key) == type("")
         if not self.is_learning:
             return []
         return [neuron

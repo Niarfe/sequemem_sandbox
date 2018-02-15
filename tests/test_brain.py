@@ -1,6 +1,7 @@
 import sys
 sys.path.append("./sequemem")
-from brain import *
+from sequemem import *
+
 
 
 def tokenize(sentence):
