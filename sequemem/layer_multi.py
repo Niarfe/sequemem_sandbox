@@ -62,23 +62,24 @@ class LayerMulti:
 
         
         pred_keys = self.get_predicted()
-        if set(column_keys).issubset(pred_keys):
-            print(column_keys, "IS a subset of ", pred_keys)
+        # Gather neurons that will be set active
+        prd_nrns = [neuron for _key in column_key for neuron in self._column_get('P', _key)]
+        if set(column_keys) == set(pred_keys):
+            print(column_keys, "IS EQUAL ", pred_keys)
             is_new = False
         else:
-            print(column_keys, "is NOT subset of ", pred_keys)
+            print(column_keys, "is NOT EQUAL ", pred_keys)
             is_new = True
 
         act_nrns = self.get_all_actives()
 
         def process_one_key(_key):
-            # Gather neurons that will be set active
-            prd_nrns = self._column_get('P', _key)
+
 
             # UPDATE
             if not is_new:
                 self.panic_neuron.set_inactive()
-                debug("UPDATE set previous chosen predicts to active")
+                debug("\tUPDATE set previous chosen predicts to active")
                 for prd_nrn in prd_nrns:
                     prd_nrn.set_active()
             else:
@@ -86,10 +87,13 @@ class LayerMulti:
                     return
                 self.panic_neuron.set_inactive()
                 nw_nrn = Neuron()
-                for act_nrn in act_nrns:
-                    act_nrn.add_upstream(nw_nrn)
-                debug("about to add neuron to column {}".format(_key))
+                debug("\tabout to add neuron to column {}".format(_key))
                 self.columns[_key].append(nw_nrn)
+                for act_nrn in act_nrns:
+                    debug("\t\tadding new neuron to active one")
+                    act_nrn.add_upstream(nw_nrn)
+
+                debug("\tsetting new neuron active")
                 nw_nrn.set_active()
 
         for key in column_keys:
