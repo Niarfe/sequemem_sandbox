@@ -1,5 +1,8 @@
 from collections import defaultdict
-from sequemem import *
+import sys
+from neuron import *
+def debug(out_str):
+    print("[{}]: {}".format(sys._getframe(1).f_code.co_name, out_str))
 class LayerMulti:
     def __init__(self, name="anon"):
         self.columns = defaultdict(list)
@@ -57,10 +60,13 @@ class LayerMulti:
         assert type(column_keys) == type([])
         print("in hit", column_keys)
 
-        is_new = False
+        
         pred_keys = self.get_predicted()
-        if set(pred_keys) != set(column_keys):
-            print("In if set...", pred_keys, column_keys)
+        if set(column_keys).issubset(pred_keys):
+            print(column_keys, "IS a subset of ", pred_keys)
+            is_new = False
+        else:
+            print(column_keys, "is NOT subset of ", pred_keys)
             is_new = True
 
         act_nrns = self.get_all_actives()
@@ -72,7 +78,7 @@ class LayerMulti:
             # UPDATE
             if not is_new:
                 self.panic_neuron.set_inactive()
-                # UPDATE set previous chosen predicts to active
+                debug("UPDATE set previous chosen predicts to active")
                 for prd_nrn in prd_nrns:
                     prd_nrn.set_active()
             else:
@@ -82,7 +88,7 @@ class LayerMulti:
                 nw_nrn = Neuron()
                 for act_nrn in act_nrns:
                     act_nrn.add_upstream(nw_nrn)
-                print("about to add neuron to column {}".format(_key))
+                debug("about to add neuron to column {}".format(_key))
                 self.columns[_key].append(nw_nrn)
                 nw_nrn.set_active()
 

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from sequemem import *
+from neuron import *
 class Layer:
     def __init__(self, name="anon"):
         self.columns = defaultdict(list)

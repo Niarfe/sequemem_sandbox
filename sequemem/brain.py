@@ -1,5 +1,5 @@
 from collections import defaultdict
-
+from layer import *
 class Brain:
     def __init__(self):
         self.layer = Layer()

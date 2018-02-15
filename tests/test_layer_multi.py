@@ -1,5 +1,7 @@
 import sys
 sys.path.append("./sequemem")
+from neuron import *
+from layer import *
 from layer_multi import *
 
 
@@ -62,28 +64,34 @@ def test_different_sequence_mid_retrieval():
 
     layer.predict(sequence2)
     layer.show_status()
-    assert sorted(layer.predict(sequence1[:2])) == sorted(['1','2','3','4'])
+    assert sorted(layer.predict(sequence1[:1])) == sorted(['1','2','3','4'])
     assert sorted(layer.predict(sequence2[:1])) == sorted(['1','2','3','4'])
 
-# def test_different_sequence_diff_endpoint():
-#     layer = LayerMulti("multi")
+    assert sorted(layer.predict(sequence1[:2])) == sorted(['d'])
+    assert sorted(layer.predict(sequence2[:2])) == sorted(['d'])
 
-#     sequence1 = [
-#         ['a','b'],
-#         ['1','2','3'],
-#         ['d']
-#     ]
+def test_different_sequence_end_points():
+    layer = LayerMulti("multi")
 
-#     layer.predict(sequence1)
-#     layer.show_status()
+    sequence1 = [
+        ['a','b'],
+        ['1','2','3'],
+        ['d']
+    ]
 
-#     sequence2 = [
-#         ['a','b'],
-#         ['1','2','4'],
-#         ['e']
-#     ]
+    layer.predict(sequence1)
+    layer.show_status()
 
-#     layer.predict(sequence2)
-#     layer.show_status()
-#     assert sorted(layer.predict(sequence1[:2])) == sorted(sequence1[2])
-#     assert sorted(layer.predict(sequence2[:2])) == sorted(sequence2[2])
+    sequence2 = [
+        ['a','b'],
+        ['1','2','4'],
+        ['e']
+    ]
+
+    layer.predict(sequence2)
+    layer.show_status()
+    assert sorted(layer.predict(sequence1[:1])) == sorted(['1','2','3','4'])
+    assert sorted(layer.predict(sequence2[:1])) == sorted(['1','2','3','4'])
+
+    assert sorted(layer.predict(sequence1[:2])) == sorted(['d'])
+    assert sorted(layer.predict(sequence2[:2])) == sorted(['e'])

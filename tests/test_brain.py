@@ -1,6 +1,6 @@
 import sys
 sys.path.append("./sequemem")
-from sequemem import *
+from brain import *
 
 
 
