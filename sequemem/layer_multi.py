@@ -2,6 +2,7 @@ from collections import defaultdict
 import sys
 from neuron import *
 def debug(out_str):
+    return
     print("[{}]: {}".format(sys._getframe(1).f_code.co_name, out_str))
 class LayerMulti:
     def __init__(self, name="anon"):
@@ -123,8 +124,7 @@ class LayerMulti:
                 nw_nrn.set_active()
 
         process_all_keys(column_keys)
-        # for key in column_keys:
-        #     process_one_key(key)
+
 
 
     def initialize_with_single_column_lit(self, word):
