@@ -3,6 +3,13 @@ class Neuron:
         self.ns_downstream = []
         self.state = 'I'
         self.ns_upstream = []
+        self.keys = set()
+
+    def add_key(self, key):
+        self.keys.add(key)
+
+    def get_keys(self):
+        return self.keys
 
     def set_active(self):
         if self.state == 'A' or self.state == 'I' or self.state == 'P':

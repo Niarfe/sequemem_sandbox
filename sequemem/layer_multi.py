@@ -60,16 +60,20 @@ class LayerMulti:
         assert type(column_keys) == type([])
         print("in hit", column_keys)
 
-        
+
         pred_keys = self.get_predicted()
         # Gather neurons that will be set active
-        prd_nrns = [neuron for _key in column_key for neuron in self._column_get('P', _key)]
-        if set(column_keys) == set(pred_keys):
-            print(column_keys, "IS EQUAL ", pred_keys)
-            is_new = False
-        else:
-            print(column_keys, "is NOT EQUAL ", pred_keys)
-            is_new = True
+        all_prd_nrns = [neuron for _key in column_key for neuron in self._column_get('P', _key)]
+
+        is_new = True
+        prd_nrns = []
+        for prd_neuron in all_prd_nrns:
+            if prd_neuron.get_keys() == set(column_key):
+                print("pattern {} is a match!", prd_neuron.get_keys())
+                prd_nrns.append(prd_neuron)
+                is_new = False
+                break
+
 
         act_nrns = self.get_all_actives()
 
@@ -86,6 +90,7 @@ class LayerMulti:
                 self.panic_neuron.set_inactive()
                 nw_nrn = Neuron()
                 debug("\tabout to add neuron to column {}".format(_key))
+                nw_nrn.add_key(_key)
                 self.columns[_key].append(nw_nrn)
                 for act_nrn in act_nrns:
                     debug("\t\tadding new neuron to active one")
@@ -105,9 +110,10 @@ class LayerMulti:
                     return
                 self.panic_neuron.set_inactive()
                 nw_nrn = Neuron()
-                
+
                 for _key in lst_keys:
                     debug("\t\tadding neuron to column {}".format(_key))
+                    nw_nrn.add_key(_key)
                     self.columns[_key].append(nw_nrn)
                 for act_nrn in act_nrns:
                     debug("\t\tadding new neuron upstream to active")
@@ -115,7 +121,7 @@ class LayerMulti:
 
                 debug("\tsetting new neuron active")
                 nw_nrn.set_active()
-        
+
         process_all_keys(column_keys)
         # for key in column_keys:
         #     process_one_key(key)
