@@ -74,8 +74,6 @@ class LayerMulti:
         act_nrns = self.get_all_actives()
 
         def process_one_key(_key):
-
-
             # UPDATE
             if not is_new:
                 self.panic_neuron.set_inactive()
@@ -95,9 +93,32 @@ class LayerMulti:
 
                 debug("\tsetting new neuron active")
                 nw_nrn.set_active()
+        def process_all_keys(lst_keys):
+            # UPDATE
+            if not is_new:
+                self.panic_neuron.set_inactive()
+                debug("\tUPDATE set previous chosen predicts to active")
+                for prd_nrn in prd_nrns:
+                    prd_nrn.set_active()
+            else:
+                if not self.is_learning:
+                    return
+                self.panic_neuron.set_inactive()
+                nw_nrn = Neuron()
+                
+                for _key in lst_keys:
+                    debug("\t\tadding neuron to column {}".format(_key))
+                    self.columns[_key].append(nw_nrn)
+                for act_nrn in act_nrns:
+                    debug("\t\tadding new neuron upstream to active")
+                    act_nrn.add_upstream(nw_nrn)
 
-        for key in column_keys:
-            process_one_key(key)
+                debug("\tsetting new neuron active")
+                nw_nrn.set_active()
+        
+        process_all_keys(column_keys)
+        # for key in column_keys:
+        #     process_one_key(key)
 
 
     def initialize_with_single_column_lit(self, word):
