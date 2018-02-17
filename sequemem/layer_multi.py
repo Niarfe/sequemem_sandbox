@@ -31,7 +31,8 @@ class LayerMulti:
 
     def train_from_file(self, filepath):
         with open(filepath,'r') as source:
-            for sentence in source:
+            for idl, sentence in enumerate(source):
+                print(idl)
                 tokens = [[word] for word in self.tokenize(sentence)]
                 self.predict(tokens)
 
@@ -52,13 +53,13 @@ class LayerMulti:
 
         if type(sequence) == type(""):
             sequence = self.tokenize(sequence)
-        print(sequence, "in predict")
+        debug(sequence)
         for input in sequence:
             self.hit(input)
 
         prediction = list(self.get_predicted())
         for layer in self.upstream_layers:
-            print(self.name, " got ", sequence, "and hitting upward with ", prediction)
+            debug("() got {} hiting up with {}".format(self.name,  sequence, prediction))
             layer.predict(prediction)
 
         return list(prediction)
@@ -67,7 +68,7 @@ class LayerMulti:
     def hit(self, column_key):
         column_keys = [column_key] if type(column_key) == type("") else column_key
         assert type(column_keys) == type([])
-        print("in hit", column_keys)
+        debug("\nNEW HIT: {}".format(column_keys))
 
 
         pred_keys = self.get_predicted()
@@ -78,7 +79,7 @@ class LayerMulti:
         prd_nrns = []
         for prd_neuron in all_prd_nrns:
             if prd_neuron.get_keys() == set(column_key):
-                print("pattern {} is a match!", prd_neuron.get_keys())
+                debug("pattern {} is a match!".format(prd_neuron.get_keys()))
                 prd_nrns.append(prd_neuron)
                 is_new = False
                 break
@@ -86,31 +87,29 @@ class LayerMulti:
 
         act_nrns = self.get_all_actives()
 
-        def process_all_keys(lst_keys):
-            # UPDATE
-            if not is_new:
-                self.panic_neuron.set_inactive()
-                debug("\tUPDATE set previous chosen predicts to active")
-                for prd_nrn in prd_nrns:
-                    prd_nrn.set_active()
-            else:
-                if not self.is_learning:
-                    return
-                self.panic_neuron.set_inactive()
-                nw_nrn = Neuron()
+        # UPDATE
+        if not is_new:
+            self.panic_neuron.set_inactive()
+            debug("\tUPDATE set previous chosen predicts to active")
+            for prd_nrn in prd_nrns:
+                prd_nrn.set_active()
+        else:
+            if not self.is_learning:
+                return
+            self.panic_neuron.set_inactive()
+            nw_nrn = Neuron()
 
-                for _key in lst_keys:
-                    debug("\t\tadding neuron to column {}".format(_key))
-                    nw_nrn.add_key(_key)
-                    self.columns[_key].append(nw_nrn)
-                for act_nrn in act_nrns:
-                    debug("\t\tadding new neuron upstream to active")
-                    act_nrn.add_upstream(nw_nrn)
+            for _key in column_keys:
+                debug("\t\tadding neuron to column {}".format(_key))
+                nw_nrn.add_key(_key)
+                self.columns[_key].append(nw_nrn)
+            for act_nrn in act_nrns:
+                debug("\t\tadding new neuron upstream to active")
+                act_nrn.add_upstream(nw_nrn)
 
-                debug("\tsetting new neuron active")
-                nw_nrn.set_active()
+            debug("\tsetting new neuron active")
+            nw_nrn.set_active()
 
-        process_all_keys(column_keys)
 
 
 
@@ -198,10 +197,10 @@ class LayerMulti:
         return [key for key in self.columns.keys()]
 
     def show_status(self):
-        print("STATUS {}: ".format(self.name), self.activation_neuron.state)
+        print("\tSTATUS {}: ".format(self.name), self.activation_neuron.state)
         for key, neurons in self.columns.items():
             print(
-                "{}:\t{}".format(
+                "\t{}:\t{}".format(
                     key,
                     str([neuron.state for neuron in neurons])
                     )
