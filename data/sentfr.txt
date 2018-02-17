@@ -1,4 +1,3 @@
-Namespace(source='processed_data/fairy_tales_every_child_should_know_pg14916.txt')
 FAIRY TALES EVERY CHILD
 SHOULD KNOW
 CHAPTER I
