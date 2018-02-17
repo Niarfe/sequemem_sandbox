@@ -11,6 +11,38 @@ def tokenize(sentence):
 def test_tokenize():
     assert tokenize("we are") == ["we", "are"]
 
+def test_sequencer():
+    layer = LayerMulti()
+    assert layer.sequencer("this is a string") == [["this"], ["is"],["a"],["string"]]
+
+def test_sequencer_actually_works_with_layer():
+    layer = LayerMulti()
+    layer.predict("this is a sequence")
+    assert layer.predict("this is a") == ["sequence"]
+    layer.predict("this is a foobar")
+    assert layer.predict("this is a") == ["foobar", "sequence"]
+
+def test_should_behave_as_it_was_sequenced():
+    layer = LayerMulti()
+    sentence = layer.sequencer("this is a sequence")
+    layer.predict(sentence)
+    assert layer.predict("this is a") == ["sequence"]
+
+    another_sentence = layer.sequencer("this is a foobar")
+    layer.predict(another_sentence)
+    assert layer.predict("this is a") == ["foobar", "sequence"]
+
+
+def test_clarify_behavior_with_array_of_arryas():
+    layer = LayerMulti()
+    sentence = [["this is"], ["a sequence"]]
+    layer.predict(sentence)
+    assert layer.predict([["this is"]]) == ["a sequence"]
+
+    another_sentence = [["this is"],["a foobar"]]
+    layer.predict(another_sentence)
+    assert layer.predict([["this is"]]) == ["a foobar", "a sequence"]
+
 def test_layer_multi_basic_two_step():
     layer = LayerMulti()
 

@@ -13,6 +13,11 @@ class LayerMulti:
         self.upstream_layers = []
         self.name = name
 
+    def sequencer(self, str_rep):
+        assert type(str_rep) == type(""), "sequencer type must be string"
+        return [[word.strip()] for word in str_rep.split(' ')]
+
+
     def add_upstream(self, layer):
         self.upstream_layers.append(layer)
 
@@ -33,10 +38,13 @@ class LayerMulti:
     def is_like(self, word):
         if type(word) == type([]):
             assert len(word) == 1, "Multiple is_like not supported yet"
-            
+
         return self.predict([word, ["is"]])
 
     def predict(self, sequence, any_match=False):
+        if type(sequence) == type(""):
+            sequence = self.sequencer(sequence)
+
         if any_match:
             self.reset_any_match()
         else:
