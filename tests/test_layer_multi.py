@@ -101,42 +101,43 @@ def test_several_sentences():
     layer.train_from_file('data/cortical_example1.1.txt')
     print("\n=============\n")
     sentence = [["fox"], ["eat"]]
-    
+
     print("\nLAYER PREDICT: ", layer.predict(sentence))
 
     is_like_fox = layer.is_like(["fox"])
     print("\nIS LIKE FOX: ", is_like_fox)
     similar_to_fox = layer.is_like(is_like_fox)
-    
+
     print("\nSIMILAR TO: ", similar_to_fox)
     layer.show_status()
     similar_to_fox.remove("fox")
 
-    print("Similar to fox: ", similar_to_fox)
+    print("\nSimilar to fox: ", similar_to_fox)
     random_choice = random.choice(similar_to_fox)
-    print("Random Choice: ", random_choice)
+    print("\nRandom Choice: ", random_choice)
 
     res = layer.predict([[ random_choice ], ["eat"]])
     print("Well pick this guy and see what he/she eats: ",res)
-    raise
+
 
 def test_prep_prediction_new():
     layer = LayerMulti()
     layer.train_from_file('data/cortical_example1.1.txt')
+
     animal = "fox"
     verb = "eat"
     sentence = "{} {}".format(animal, verb)
     print(sentence)
-    print("IS LIKE", layer.is_like(animal))
+    print("IS LIKE", layer.is_like([animal]))
 
-    similar_to_fox = layer.is_like(layer.is_like(animal))
+    similar_to_fox = layer.is_like(layer.is_like([animal]))
     similar_to_fox.remove(animal)
 
     res = {}
     collected = []
     for simile in similar_to_fox:
-        res[simile] = layer.predict([simile, verb])
-        collected.extend(layer.predict([simile, verb]))
+        res[simile] = layer.predict([[simile], [verb]])
+        collected.extend(layer.predict([[simile], [verb]]))
 
     finalcol = list(set(collected))
     for k, v in res.items():
