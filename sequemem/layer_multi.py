@@ -27,14 +27,14 @@ class LayerMulti:
     def train_from_file(self, filepath):
         with open(filepath,'r') as source:
             for sentence in source:
-                tokens = self.tokenize(sentence)
+                tokens = [[word] for word in self.tokenize(sentence)]
                 self.predict(tokens)
 
     def is_like(self, word):
         if type(word) == type([]):
             assert len(word) == 1, "Multiple is_like not supported yet"
-            word = word[0]
-        return self.predict("{} is".format(word))
+            
+        return self.predict([word, ["is"]])
 
     def predict(self, sequence, any_match=False):
         if any_match:

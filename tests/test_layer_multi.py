@@ -99,20 +99,26 @@ def test_different_sequence_end_points():
 def test_several_sentences():
     layer = LayerMulti()
     layer.train_from_file('data/cortical_example1.1.txt')
+    print("\n=============\n")
+    sentence = [["fox"], ["eat"]]
+    
+    print("\nLAYER PREDICT: ", layer.predict(sentence))
 
-    sentence = "fox eat"
-    print(sentence)
-    print(layer.predict(sentence))
-
-    similar_to_fox = layer.is_like(layer.is_like("fox"))
+    is_like_fox = layer.is_like(["fox"])
+    print("\nIS LIKE FOX: ", is_like_fox)
+    similar_to_fox = layer.is_like(is_like_fox)
+    
+    print("\nSIMILAR TO: ", similar_to_fox)
+    layer.show_status()
     similar_to_fox.remove("fox")
 
     print("Similar to fox: ", similar_to_fox)
     random_choice = random.choice(similar_to_fox)
     print("Random Choice: ", random_choice)
 
-    res = layer.predict([ random_choice ] + ["eat"])
+    res = layer.predict([[ random_choice ], ["eat"]])
     print("Well pick this guy and see what he/she eats: ",res)
+    raise
 
 def test_prep_prediction_new():
     layer = LayerMulti()
