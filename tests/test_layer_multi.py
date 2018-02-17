@@ -3,7 +3,7 @@ sys.path.append("./sequemem")
 from neuron import *
 from layer import *
 from layer_multi import *
-
+import random
 
 def tokenize(sentence):
     return [word.strip('\t\n\r .') for word in sentence.split(' ')]
@@ -95,3 +95,46 @@ def test_different_sequence_end_points():
 
     assert sorted(layer.predict(sequence1[:2])) == sorted(['d'])
     assert sorted(layer.predict(sequence2[:2])) == sorted(['e'])
+
+def test_several_sentences():
+    layer = LayerMulti()
+    layer.train_from_file('data/cortical_example1.1.txt')
+
+    sentence = "fox eat"
+    print(sentence)
+    print(layer.predict(sentence))
+
+    similar_to_fox = layer.is_like(layer.is_like("fox"))
+    similar_to_fox.remove("fox")
+
+    print("Similar to fox: ", similar_to_fox)
+    random_choice = random.choice(similar_to_fox)
+    print("Random Choice: ", random_choice)
+
+    res = layer.predict([ random_choice ] + ["eat"])
+    print("Well pick this guy and see what he/she eats: ",res)
+
+def test_prep_prediction_new():
+    layer = LayerMulti()
+    layer.train_from_file('data/cortical_example1.1.txt')
+    animal = "fox"
+    verb = "eat"
+    sentence = "{} {}".format(animal, verb)
+    print(sentence)
+    print("IS LIKE", layer.is_like(animal))
+
+    similar_to_fox = layer.is_like(layer.is_like(animal))
+    similar_to_fox.remove(animal)
+
+    res = {}
+    collected = []
+    for simile in similar_to_fox:
+        res[simile] = layer.predict([simile, verb])
+        collected.extend(layer.predict([simile, verb]))
+
+    finalcol = list(set(collected))
+    for k, v in res.items():
+        print(k, v)
+    print(finalcol)
+
+    assert sorted(finalcol) == sorted(['flies', 'squirrel', 'cow', 'salmon', 'rodent', 'rabbit', 'mice'])

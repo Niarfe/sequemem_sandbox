@@ -109,24 +109,8 @@ def test_layer_create_two_words_predict_two():
     layer.show_status()
     assert sorted(prediction) == sorted(["here","there"])
 
-import random
-def test_several_sentences():
-    layer = Layer()
-    layer.train_from_file('data/cortical_example1.1.txt')
 
-    sentence = "fox eat"
-    print(sentence)
-    print(layer.predict(sentence))
 
-    similar_to_fox = layer.is_like(layer.is_like("fox"))
-    similar_to_fox.remove("fox")
-
-    print("Similar to fox: ", similar_to_fox)
-    random_choice = random.choice(similar_to_fox)
-    print("Random Choice: ", random_choice)
-
-    res = layer.predict([ random_choice ] + ["eat"])
-    print("Well pick this guy and see what he/she eats: ",res)
 
 def test_full_tri_gate():
     layer = Layer()
@@ -147,45 +131,17 @@ def test_sequence_layer():
     layer.show_status()
     assert sorted(prediction) == ["0","1"]
 
-def test_prep_prediction_new():
-    layer = Layer()
-    layer.train_from_file('data/cortical_example1.1.txt')
-    animal = "fox"
-    verb = "eat"
-    sentence = "{} {}".format(animal, verb)
-    print(sentence)
-    print("IS LIKE", layer.is_like(animal))
-
-    similar_to_fox = layer.is_like(layer.is_like(animal))
-    similar_to_fox.remove(animal)
-
-    res = {}
-    collected = []
-    for simile in similar_to_fox:
-        res[simile] = layer.predict([simile, verb])
-        collected.extend(layer.predict([simile, verb]))
-
-    finalcol = list(set(collected))
-    for k, v in res.items():
-        print(k, v)
-    print(finalcol)
-
-    assert sorted(finalcol) == sorted(['flies', 'squirrel', 'cow', 'salmon', 'rodent', 'rabbit', 'mice'])
-
-
-
-
 def test_multiple_inputs():
-    layer = Layer()
-    contx = Layer()
+    layer = Layer("layer")
+    contx = Layer("context")
 
     context = "upper"
-    sequence = ["A","B","C"]
+    sequence = [["A"],["B"],["C"]]
     cumulative = []
     for letter in sequence:
         cumulative.append(letter)
         layer.predict(cumulative)
-        contx.predict([context])
+        contx.predict([[context]])
         lact = layer.get_active_neurons()
         cact = contx.get_active_neurons()
         for cn in cact:
@@ -197,17 +153,17 @@ def test_multiple_inputs():
     assert contx.get_all_actives() == []
     assert contx.get_predicted() == ["upper"]
 
-    assert layer.predict(["A", "B"]) == ["C"]
+    assert layer.predict([["A"],["B"]]) == ["C"]
     assert contx.get_all_actives() == []
     assert contx.get_predicted() == ["upper"]
 
     context = "lower"
-    sequence = ["A","b","c"]
+    sequence = [["A"],["b"],["c"]]
     cumulative = []
     for letter in sequence:
         cumulative.append(letter)
         layer.predict(cumulative)
-        contx.predict([context])
+        contx.predict([[context]])
         lact = layer.get_active_neurons()
         cact = contx.get_active_neurons()
         for cn in cact:
@@ -220,7 +176,7 @@ def test_multiple_inputs():
     layer.show_status()
     assert contx.get_all_actives() == []
     assert contx.get_predicted() == ["upper", "lower"]
-    contx.predict("lower")
+    contx.predict([[context]])
     pred_layer2 = layer.get_predicted()
 
     layer.show_status()
