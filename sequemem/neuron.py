@@ -1,7 +1,15 @@
+
+
 class Neuron:
+    global_state = {
+        "active": set(),
+        "predict": set(),
+        "inactive": set()
+        }
     def __init__(self):
         self.ns_downstream = []
         self.state = 'I'
+        Neuron.global_state["inactive"].add(self)
         self.ns_upstream = []
         self.keys = set()
 
@@ -12,38 +20,62 @@ class Neuron:
         return self.keys
 
     def set_active(self):
-        if self.state == 'A' or self.state == 'I' or self.state == 'P':
-            for neuron in self.ns_downstream:
-                neuron.set_inactive()
-            for neuron in self.ns_upstream:
-                neuron.set_predict()
+        for neuron in self.ns_downstream:
+            neuron.set_inactive()
+        for neuron in self.ns_upstream:
+            neuron.set_predict()
 
-        self.state = 'A'
+        if self.state == 'A':
+            return
+
+        elif self.state == 'I':
+            Neuron.global_state["inactive"].remove(self)
+            Neuron.global_state["active"].add(self)
+            self.state = 'A'
+            return
+        elif self.state == 'P':
+            Neuron.global_state["predict"].remove(self)
+            Neuron.global_state["active"].add(self)
+            self.state == 'A'
+            return
+
+        assert False, "set_active failed"
 
     def set_hard_state(self, state):
+        assert False
         self.state = state
 
     def set_predict(self):
         if self.state == 'P':
             return
         elif self.state == 'A':
-            raise "active neuron can't be set to predict"
+            return
+            #raise "active neuron can't be set to predict"
         elif self.state == 'I':
+            Neuron.global_state["inactive"].remove(self)
+            Neuron.global_state["predict"].add(self)
             self.state = 'P'
+            return
 
-        self.state = 'P'
+        assert False, "set_predict failed"
 
     def set_inactive(self):
         if self.state == 'I':
             return
         elif self.state == 'P':
-            pass
+            Neuron.global_state["predict"].remove(self)
+            Neuron.global_state["inactive"].add(self)
+            self.state = 'I'
+            return
         elif self.state == 'A':
+            Neuron.global_state["active"].remove(self)
+            Neuron.global_state["inactive"].add(self)
             self.state = 'I'
             for neuron in self.ns_upstream:
                     neuron.set_inactive()
+            return
 
-        self.state = 'I'
+        assert False, "set_inactive failed"
 
     def add_upstream(self, neuron):
         neuron.add_downstream(self)

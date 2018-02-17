@@ -13,6 +13,10 @@ class LayerMulti:
         self.upstream_layers = []
         self.name = name
 
+        self.act_nrns = []
+        self.all_prd_nrns = []
+        self.inactives = []
+
     def sequencer(self, str_rep):
         assert type(str_rep) == type(""), "sequencer type must be string"
         return [[word.strip()] for word in str_rep.split(' ')]
@@ -54,6 +58,7 @@ class LayerMulti:
         if type(sequence) == type(""):
             sequence = self.tokenize(sequence)
         debug(sequence)
+
         for input in sequence:
             self.hit(input)
 
@@ -72,8 +77,13 @@ class LayerMulti:
 
 
         pred_keys = self.get_predicted()
+
         # Gather neurons that will be set active
-        all_prd_nrns = [neuron for _key in column_key for neuron in self._column_get('P', _key)]
+        #all_prd_nrns = [neuron for _key in column_key for neuron in self._column_get('P', _key)]
+        #act_nrns = self.get_all_actives()
+        #act_nrns, all_prd_nrns = self.get_current_neurons()
+        act_nrns = Neuron.global_state["active"]
+        all_prd_nrns = Neuron.global_state["predict"]
 
         is_new = True
         prd_nrns = []
@@ -83,9 +93,6 @@ class LayerMulti:
                 prd_nrns.append(prd_neuron)
                 is_new = False
                 break
-
-
-        act_nrns = self.get_all_actives()
 
         # UPDATE
         if not is_new:
@@ -158,6 +165,25 @@ class LayerMulti:
                     col_neuron.set_predict()
 
 
+    def get_current_neurons(self):
+        """Get all the states at once, maybe we can save time this way"""
+        actives = []
+        predict = []
+
+        for key, neurons in self.columns.items():
+            for neuron in neurons:
+                if neuron.state == 'A':
+                    actives.append(neuron)
+                elif neuron.state == 'P':
+                    predict.append(neuron)
+
+        state_activation = self.activation_neuron.state
+        if state_activation == 'A':
+            actives.append(self.activation_neuron)
+        elif state_activation == 'P':
+            predict.append(self.activation_neuron)
+
+        return actives, predict
 
     def get_all_actives(self):
         """Get ALL active neurons, even if it's the activation neuron.
