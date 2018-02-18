@@ -131,112 +131,112 @@ def test_sequence_layer():
     layer.show_status()
     assert sorted(prediction) == ["0","1"]
 
-def test_multiple_inputs():
-    layer = Layer("layer")
-    contx = Layer("context")
+# def test_multiple_inputs():
+#     layer = Layer("layer")
+#     contx = Layer("context")
 
-    context = "upper"
-    sequence = [["A"],["B"],["C"]]
-    cumulative = []
-    for letter in sequence:
-        cumulative.append(letter)
-        layer.predict(cumulative)
-        contx.predict([[context]])
-        lact = layer.get_active_neurons()
-        cact = contx.get_active_neurons()
-        for cn in cact:
-            for ln in lact:
-                cn.add_upstream(ln)
-                ln.add_upstream(cn)
+#     context = "upper"
+#     sequence = [["A"],["B"],["C"]]
+#     cumulative = []
+#     for letter in sequence:
+#         cumulative.append(letter)
+#         layer.predict(cumulative)
+#         contx.predict([[context]])
+#         lact = layer.get_active_neurons()
+#         cact = contx.get_active_neurons()
+#         for cn in cact:
+#             for ln in lact:
+#                 cn.add_upstream(ln)
+#                 ln.add_upstream(cn)
 
-    assert layer.predict(["A"]) == ["B"]
-    assert contx.get_all_actives() == []
-    assert contx.get_predicted() == ["upper"]
+#     assert layer.predict(["A"]) == ["B"]
+#     assert contx.get_all_actives() == []
+#     assert contx.get_predicted() == ["upper"]
 
-    assert layer.predict([["A"],["B"]]) == ["C"]
-    assert contx.get_all_actives() == []
-    assert contx.get_predicted() == ["upper"]
+#     assert layer.predict([["A"],["B"]]) == ["C"]
+#     assert contx.get_all_actives() == []
+#     assert contx.get_predicted() == ["upper"]
 
-    context = "lower"
-    sequence = [["A"],["b"],["c"]]
-    cumulative = []
-    for letter in sequence:
-        cumulative.append(letter)
-        layer.predict(cumulative)
-        contx.predict([[context]])
-        lact = layer.get_active_neurons()
-        cact = contx.get_active_neurons()
-        for cn in cact:
-            for ln in lact:
-                cn.add_upstream(ln)
-                ln.add_upstream(cn)
+#     context = "lower"
+#     sequence = [["A"],["b"],["c"]]
+#     cumulative = []
+#     for letter in sequence:
+#         cumulative.append(letter)
+#         layer.predict(cumulative)
+#         contx.predict([[context]])
+#         lact = layer.get_active_neurons()
+#         cact = contx.get_active_neurons()
+#         for cn in cact:
+#             for ln in lact:
+#                 cn.add_upstream(ln)
+#                 ln.add_upstream(cn)
 
-    pred_layer = layer.predict(["A"])
-    assert pred_layer == ["B","b"]
-    layer.show_status()
-    assert contx.get_all_actives() == []
-    assert contx.get_predicted() == ["upper", "lower"]
-    contx.predict([[context]])
-    pred_layer2 = layer.get_predicted()
+#     pred_layer = layer.predict(["A"])
+#     assert pred_layer == ["B","b"]
+#     layer.show_status()
+#     assert contx.get_all_actives() == []
+#     assert contx.get_predicted() == ["upper", "lower"]
+#     contx.predict([[context]])
+#     pred_layer2 = layer.get_predicted()
 
-    layer.show_status()
-    contx.show_status()
-    final_prediction = list(set(pred_layer) & set(pred_layer2))
-    assert final_prediction == ["b"]
+#     layer.show_status()
+#     contx.show_status()
+#     final_prediction = list(set(pred_layer) & set(pred_layer2))
+#     assert final_prediction == ["b"]
 
 
-def test_classic_bass_example():
-    layer = Layer()
-    contx = Layer()
+# def test_classic_bass_example():
+#     layer = Layer()
+#     contx = Layer()
 
-    context = ["music"]
-    sequence = [["bass"],["is"],["instrument"]]
-    cumulative = []
-    for letter in sequence:
-        cumulative.append(letter)
-        layer.predict(cumulative)
-        contx.predict([context])
-        lact = layer.get_active_neurons()
-        cact = contx.get_active_neurons()
-        for cn in cact:
-            for ln in lact:
-                cn.add_upstream(ln)
-                ln.add_upstream(cn)
+#     context = ["music"]
+#     sequence = [["bass"],["is"],["instrument"]]
+#     cumulative = []
+#     for letter in sequence:
+#         cumulative.append(letter)
+#         layer.predict(cumulative)
+#         contx.predict([context])
+#         lact = layer.get_active_neurons()
+#         cact = contx.get_active_neurons()
+#         for cn in cact:
+#             for ln in lact:
+#                 cn.add_upstream(ln)
+#                 ln.add_upstream(cn)
 
-    assert layer.predict([["bass"]]) == ["is"]
-    assert contx.get_all_actives() == []
-    assert contx.get_predicted() == ["music"]
+#     assert layer.predict([["bass"]]) == ["is"]
+#     assert contx.get_all_actives() == []
+#     assert contx.get_predicted() == ["music"]
 
-    assert layer.predict([["bass"],["is"]]) == ["instrument"]
-    assert contx.get_all_actives() == []
-    assert contx.get_predicted() == ["music"]
+#     assert layer.predict([["bass"],["is"]]) == ["instrument"]
+#     assert contx.get_all_actives() == []
+#     assert contx.get_predicted() == ["music"]
 
-    context = ["fishing"]
-    sequence = [["bass"],["is"],["fish"]]
-    cumulative = []
-    for letter in sequence:
-        cumulative.append(letter)
-        layer.predict(cumulative)
-        contx.predict([context])
-        lact = layer.get_active_neurons()
-        cact = contx.get_active_neurons()
-        for cn in cact:
-            for ln in lact:
-                cn.add_upstream(ln)
-                ln.add_upstream(cn)
+#     context = ["fishing"]
+#     sequence = [["bass"],["is"],["fish"]]
+#     cumulative = []
+#     for letter in sequence:
+#         cumulative.append(letter)
+#         layer.predict(cumulative)
+#         contx.predict([context])
+#         lact = layer.get_active_neurons()
+#         cact = contx.get_active_neurons()
+#         for cn in cact:
+#             for ln in lact:
+#                 cn.add_upstream(ln)
+#                 ln.add_upstream(cn)
 
-    pred_layer = layer.predict([["bass"],["is"]])
-    assert pred_layer == ["instrument", "fish"]
-    layer.show_status()
-    assert contx.get_all_actives() == []
-    assert sorted(contx.get_predicted()) == sorted(["music", "fishing"])
-    contx.predict([["fishing"]])
-    pred_layer2 = layer.get_predicted()
+#     pred_layer = layer.predict([["bass"],["is"]])
+#     assert pred_layer == ["instrument", "fish"]
+#     layer.show_status()
+#     assert contx.get_all_actives() == []
+#     assert sorted(contx.get_predicted()) == sorted(["music", "fishing"])
+#     contx.predict([["fishing"]])
+#     pred_layer2 = layer.get_predicted()
 
-    layer.show_status()
-    contx.show_status()
-    final_prediction = list(set(pred_layer) & set(pred_layer2))
-    assert final_prediction == ["fish"]
+#     layer.show_status()
+#     contx.show_status()
+#     final_prediction = list(set(pred_layer) & set(pred_layer2))
+#     assert final_prediction == ["fish"]
 
 
 

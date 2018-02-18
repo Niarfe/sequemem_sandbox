@@ -1,6 +1,9 @@
 from collections import defaultdict
 import sys
 from neuron import *
+
+from collections import Counter
+
 def debug(out_str):
     return
     print("[{}]: {}".format(sys._getframe(1).f_code.co_name, out_str))
@@ -62,12 +65,13 @@ class LayerMulti:
         for input in sequence:
             self.hit(input)
 
-        prediction = list(self.get_predicted())
+        prediction = Neuron.global_keys("predict")
+
         for layer in self.upstream_layers:
             debug("() got {} hiting up with {}".format(self.name,  sequence, prediction))
             layer.predict(prediction)
 
-        return list(prediction)
+        return prediction
 
 
     def hit(self, column_key):
@@ -75,13 +79,7 @@ class LayerMulti:
         assert type(column_keys) == type([])
         debug("\nNEW HIT: {}".format(column_keys))
 
-
-        pred_keys = self.get_predicted()
-
         # Gather neurons that will be set active
-        #all_prd_nrns = [neuron for _key in column_key for neuron in self._column_get('P', _key)]
-        #act_nrns = self.get_all_actives()
-        #act_nrns, all_prd_nrns = self.get_current_neurons()
         act_nrns = Neuron.global_state["active"]
         all_prd_nrns = Neuron.global_state["predict"]
 
@@ -90,17 +88,14 @@ class LayerMulti:
         for prd_neuron in all_prd_nrns:
             if prd_neuron.get_keys() == set(column_key):
                 debug("pattern {} is a match!".format(prd_neuron.get_keys()))
-                prd_nrns.append(prd_neuron)
+                prd_neuron.set_active()
+                self.panic_neuron.set_inactive()
                 is_new = False
                 break
 
         # UPDATE
-        if not is_new:
-            self.panic_neuron.set_inactive()
-            debug("\tUPDATE set previous chosen predicts to active")
-            for prd_nrn in prd_nrns:
-                prd_nrn.set_active()
-        else:
+        if is_new:
+            debug("pattern match not found for {}".format(column_key))
             if not self.is_learning:
                 return
             self.panic_neuron.set_inactive()
@@ -118,44 +113,62 @@ class LayerMulti:
             nw_nrn.set_active()
 
 
-
-
     def initialize_with_single_column_lit(self, word):
-        assert type(sentence) != type(""), "Input to predict with light column is single word"
+        assert type(word) != type(""), "Input to predict with light column is single word"
         self.full_reset()
         self.light_column(word)
-        actives = self.get_active_neurons()
-        predicted = self.get_predicted()
+        active = Neuron.global_state["active"]
+        predicted = Neuron.global_state["predict"]
         return active, predicted
 
 
-    def predict_clear_then_light_column_on_sentence(self, sentence):
-        if type(sentence) == type(""):
-            sentence = self.tokenize(sentence)
-        # FORGET UPDATE PREDICT
-        self.full_reset()       # Forget
+    def predict_clear_then_light_column_on_word(self, word):
+        assert type(word) == type(""), "Input must be a string <key>"
+        self.full_reset()
         self.light_column(word)
-        predicted = self.get_predicted()
+        predicts =  Neuron.global_state["predict"]
+        return list(set([key for neuron in predicts for key in neuron.keys]))
+
+    def reset(self):
+        self.full_reset()
+        self.activation_neuron.set_active()
+
+    def get_number_neurons_per_key(self):
+        d_nums = {}
+        for key, neurons in self.columns.items():
+            d_nums[key] = len(neurons)
+        return d_nums
+
+    def get_predicted_counts_from_lighting_columns(self, lst_keys, common=True):
+        self.full_reset()
+        for key in lst_keys:
+            self.light_column(key)
+        predicted_neurons = Neuron.global_state["predict"]
+        lst = []
+        for neuron in predicted_neurons:
+            [lst.append(key) for key in neuron.keys]
+        if common:
+            return Counter(lst).most_common()
+        else:
+            return dict(Counter(lst))
+
 
     def full_reset(self):
-        for key, neurons in self.columns.items():
-            for neuron in neurons:
-                neuron.set_inactive()
+        # Get them in a list first because the set changes during operation
+        actives = list(Neuron.global_state["active"])
+        predicts = list(Neuron.global_state["predict"])
+        for neuron in actives:
+            neuron.set_inactive()
+        for neuron in predicts:
+            neuron.set_inactive()
 
     def light_column(self, key):
         for neuron in self.columns[key]:
             neuron.set_active()
 
-
-    def reset(self):
-        for key, neurons in self.columns.items():
-            for neuron in neurons:
-                neuron.set_inactive()
-        self.activation_neuron.set_active()
-
     def reset_any_match(self):
-        self.full_reset()
-        self.activation_neuron.set_active()
+        self.reset()
+
         for _, col_neurons in self.columns.items():
             for col_neuron in col_neurons:
                 down_neuron = next((nrn for nrn in col_neuron.ns_downstream if nrn in col_neurons), None)
@@ -185,43 +198,6 @@ class LayerMulti:
 
         return actives, predict
 
-    def get_all_actives(self):
-        """Get ALL active neurons, even if it's the activation neuron.
-            The other function gets all actives in columns only.
-        """
-        actives = []
-        if self.activation_neuron.state == 'A':
-            actives.append(self.activation_neuron)
-        for k in self.columns.keys():
-            colactives = self._column_get('A',k)
-            actives.extend(colactives)
-        return actives
-
-
-    def _column_get(self, state, column_key):
-        assert type(column_key) == type("")
-        if not self.is_learning:
-            return []
-        return [neuron
-            for neuron in self.columns[column_key]
-            if neuron.state == state
-            ]
-
-    def get_predicted(self):
-        predicted = [k
-            for k in self.columns.keys()
-            if len(self._column_get('P', k)) > 0
-            ]
-        if len(predicted) > 0:
-            return predicted
-        else:
-            return []
-            #return self.columns.keys()
-
-
-    def column_keys(self):
-        return [key for key in self.columns.keys()]
-
     def show_status(self):
         print("\tSTATUS {}: ".format(self.name), self.activation_neuron.state)
         for key, neurons in self.columns.items():
@@ -231,15 +207,63 @@ class LayerMulti:
                     str([neuron.state for neuron in neurons])
                     )
             )
-    def _get_neurons(self, state):
-        return [neuron
-            for key in self.columns.keys()
-            for neuron in self._column_get(state, key)
-            ]
-    def get_active_neurons(self):
-        return self._get_neurons('A')
-    def get_predicted_neurons(self):
-        return self._get_neurons('P')
+
+    def column_keys(self):
+        return self.columns.keys()
+
+    # def get_all_actives(self):
+    #     """Get ALL active neurons, even if it's the activation neuron.
+    #         The other function gets all actives in columns only.
+    #     """
+    #     assert False, "Who's calling me?"
+    #     actives = []
+    #     if self.activation_neuron.state == 'A':
+    #         actives.append(self.activation_neuron)
+    #     for k in self.columns.keys():
+    #         colactives = self._column_get('A',k)
+    #         actives.extend(colactives)
+    #     return actives
+
+
+
+    # def _column_get(self, state, column_key):
+    #     assert False, "_column_get is deprecated"
+    #     assert type(column_key) == type("")
+    #     if not self.is_learning:
+    #         return []
+    #     return [neuron
+    #         for neuron in self.columns[column_key]
+    #         if neuron.state == state
+    #         ]
+
+    # def get_predicted(self):
+    #     assert False, "get_predicted is deprecated"
+    #     predicted = [k
+    #         for k in self.columns.keys()
+    #         if len(self._column_get('P', k)) > 0
+    #         ]
+    #     if len(predicted) > 0:
+    #         return predicted
+    #     else:
+    #         return []
+    #         #return self.columns.keys()
+
+
+
+
+
+    # def _get_neurons(self, state):
+    #     assert False, "deprecated"
+    #     return [neuron
+    #         for key in self.columns.keys()
+    #         for neuron in self._column_get(state, key)
+    #         ]
+    # def get_active_neurons(self):
+    #     assert False, "deprecated"
+    #     return self._get_neurons('A')
+    # def get_predicted_neurons(self):
+    #     assert False, "deprecated"
+    #     return self._get_neurons('P')
 
 
 

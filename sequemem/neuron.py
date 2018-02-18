@@ -6,6 +6,11 @@ class Neuron:
         "predict": set(),
         "inactive": set()
         }
+
+    @staticmethod
+    def global_keys(group):
+        return list(set([key for neuron in Neuron.global_state[group] for key in neuron.keys]))
+
     def __init__(self):
         self.ns_downstream = []
         self.state = 'I'
