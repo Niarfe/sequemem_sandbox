@@ -9,7 +9,7 @@ def debug(out_str):
     print("[{}]: {}".format(sys._getframe(1).f_code.co_name, out_str))
 class LayerMulti:
     def __init__(self, name="anon"):
-        self.columns = defaultdict(list)
+        self.columns = defaultdict(set)
         self.panic_neuron = Neuron()
         self.activation_neuron = Neuron()
         self.is_learning = True
@@ -39,9 +39,12 @@ class LayerMulti:
     def train_from_file(self, filepath):
         with open(filepath,'r') as source:
             for idl, sentence in enumerate(source):
-                print(idl)
-                tokens = [[word] for word in self.tokenize(sentence)]
-                self.predict(tokens)
+                self.predict([[word] for word in self.tokenize(sentence)])
+
+    def train_from_file_group_line(self, filepath):
+        with open(filepath, 'r') as source:
+            for line in source:
+                self.predict([[word.strip() for word in line.split(' ')]])
 
     def is_like(self, word):
         if type(word) == type([]):
@@ -104,7 +107,7 @@ class LayerMulti:
             for _key in column_keys:
                 debug("\t\tadding neuron to column {}".format(_key))
                 nw_nrn.add_key(_key)
-                self.columns[_key].append(nw_nrn)
+                self.columns[_key].add(nw_nrn)
             for act_nrn in act_nrns:
                 debug("\t\tadding new neuron upstream to active")
                 act_nrn.add_upstream(nw_nrn)
@@ -138,6 +141,12 @@ class LayerMulti:
         for key, neurons in self.columns.items():
             d_nums[key] = len(neurons)
         return Counter(d_nums)
+
+    def get_counts_for_specific_key(self, key):
+        ct = Counter()
+        for neuron in self.columns[key]:
+            ct += Counter(neuron.keys)
+        return ct
 
     def get_predicted_counts_from_lighting_columns(self, lst_keys):
         self.full_reset()
