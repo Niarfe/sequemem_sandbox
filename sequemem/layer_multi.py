@@ -134,12 +134,12 @@ class LayerMulti:
         self.activation_neuron.set_active()
 
     def get_number_neurons_per_key(self):
-        d_nums = {}
+        d_nums={}
         for key, neurons in self.columns.items():
             d_nums[key] = len(neurons)
-        return d_nums
+        return Counter(d_nums)
 
-    def get_predicted_counts_from_lighting_columns(self, lst_keys, common=True):
+    def get_predicted_counts_from_lighting_columns(self, lst_keys):
         self.full_reset()
         for key in lst_keys:
             self.light_column(key)
@@ -147,10 +147,8 @@ class LayerMulti:
         lst = []
         for neuron in predicted_neurons:
             [lst.append(key) for key in neuron.keys]
-        if common:
-            return Counter(lst).most_common()
-        else:
-            return dict(Counter(lst))
+
+        return Counter(lst)
 
 
     def full_reset(self):
