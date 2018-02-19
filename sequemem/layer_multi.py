@@ -159,6 +159,26 @@ class LayerMulti:
 
         return Counter(lst)
 
+    def compare_two_words(self, w1, w2, nhits=100):
+        common_w1 = self.get_counts_for_specific_key(w1).most_common(nhits)
+        common_w2 = self.get_counts_for_specific_key(w2).most_common(nhits)
+        set_w1 = set([k for k, v in common_w1])
+        set_w2 = set([k for k, v in common_w2])
+        return set_w1 - set_w2
+
+    def related_to_word(self, w1, remove_common=True, nhits=100):
+        common_w1 = self.get_counts_for_specific_key(w1).most_common(nhits)
+        stop_words = self.get_number_neurons_per_key().most_common(nhits)
+        set_w1 = set([k for k, v in common_w1])
+        set_stop_words = set([k for k, v in stop_words])
+        return set_w1 - set_stop_words
+
+
+
+    def get_top_x_words_in_layer(self, x):
+        """Return list of the top x words with the highest count in the layer"""
+        return [word for word, _ in layer.get_number_neurons_per_key().most_common()[:x]]
+
 
     def full_reset(self):
         # Get them in a list first because the set changes during operation
