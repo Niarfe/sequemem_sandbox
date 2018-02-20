@@ -41,7 +41,7 @@ def test_clarify_behavior_with_array_of_arryas():
 
     another_sentence = [["this is"],["a foobar"]]
     layer.predict(another_sentence)
-    assert layer.predict([["this is"]]) == ["a foobar", "a sequence"]
+    assert sorted(layer.predict([["this is"]])) == ["a foobar", "a sequence"]
 
 def test_layer_multi_basic_two_step():
     layer = LayerMulti()

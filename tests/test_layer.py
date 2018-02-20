@@ -61,7 +61,7 @@ def test_layer_inactive():
 
 def test_layer_create():
     layer = Layer()
-    assert layer.column_keys() == []
+    assert len(layer.column_keys()) == len([])
     prediction = layer.predict([["this"]])
     layer.show_status()
     assert len(layer.columns["this"]) == 1

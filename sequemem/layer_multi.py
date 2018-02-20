@@ -46,7 +46,7 @@ class LayerMulti:
 
             for idx, line in enumerate(source):
                 if idx % 1000 == 0:
-                    print idx
+                    print(idx)
                 self.predict([[word.strip() for word in line.split(' ')]])
 
     def is_like(self, word):
@@ -77,7 +77,7 @@ class LayerMulti:
             debug("() got {} hiting up with {}".format(self.name,  sequence, prediction))
             layer.predict(prediction)
 
-        return prediction
+        return sorted(prediction)
 
 
     def hit(self, column_key):
@@ -242,7 +242,7 @@ class LayerMulti:
             )
 
     def column_keys(self):
-        return self.columns.keys()
+        return list(self.columns.keys())
 
     # def get_all_actives(self):
     #     """Get ALL active neurons, even if it's the activation neuron.
