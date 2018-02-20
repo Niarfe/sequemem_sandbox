@@ -43,7 +43,10 @@ class LayerMulti:
 
     def train_from_file_group_line(self, filepath):
         with open(filepath, 'r') as source:
-            for line in source:
+
+            for idx, line in enumerate(source):
+                if idx % 1000 == 0:
+                    print idx
                 self.predict([[word.strip() for word in line.split(' ')]])
 
     def is_like(self, word):
@@ -166,12 +169,15 @@ class LayerMulti:
         set_w2 = set([k for k, v in common_w2])
         return set_w1 - set_w2
 
-    def related_to_word(self, w1, remove_common=True, nhits=100):
+    def related_to_word(self, w1, remove_common=True, nhits=100, nstops=100):
         common_w1 = self.get_counts_for_specific_key(w1).most_common(nhits)
-        stop_words = self.get_number_neurons_per_key().most_common(nhits)
         set_w1 = set([k for k, v in common_w1])
-        set_stop_words = set([k for k, v in stop_words])
-        return set_w1 - set_stop_words
+        if remove_common:
+            stop_words = self.get_number_neurons_per_key().most_common(nstops)
+            set_stop_words = set([k for k, v in stop_words])
+            return set_w1 - set_stop_words
+        else:
+            return set_w1
 
 
 
