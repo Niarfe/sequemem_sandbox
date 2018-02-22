@@ -81,7 +81,7 @@ class LayerMulti:
 
         return sorted(prediction)
 
-    def predict_with_output(self, sequence, outputs=None):
+    def predict_with_output(self, sequence, seq_outputs=[]):
         if type(sequence) == type(""):
             sequence = self.sequencer(sequence)
 
@@ -90,9 +90,11 @@ class LayerMulti:
         if type(sequence) == type(""):
             sequence = self.tokenize(sequence)
         debug(sequence)
-
+        for k in seq_outputs:
+            
+        
         for input in sequence:
-            self.hit(input, outputs)
+            self.hit(input, self.output_layer)
 
         prediction = Neuron.global_keys("predict")
 

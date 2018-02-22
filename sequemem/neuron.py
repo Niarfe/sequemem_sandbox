@@ -1,22 +1,14 @@
 
 
 class OutputNeuron:
-    global_state = {
-        "active": set(),
-        "predict": set(),
-        "inactive": set()
-        }
 
-    @staticmethod
-    def global_keys(group):
-        return list(set([key for neuron in Neuron.global_state[group] for key in neuron.keys]))
-
-    def __init__(self):
+    def __init__(self, parent_layer):
         self.ns_downstream = []
         self.state = 'I'
-        Neuron.global_state["inactive"].add(self)
         self.ns_upstream = []
         self.keys = set()
+        self.layer = parent_layer
+        parent_layer.add(self)
 
     def add_key(self, key):
         self.keys.add(key)
