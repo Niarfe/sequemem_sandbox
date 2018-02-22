@@ -6,7 +6,7 @@ class Neuron:
         self.ns_downstream = []
         self.ns_upstream = []
         self.keys = set()
-
+        print(self.layer)
         self.layer.global_state["inactive"].add(self)
         self.state = 'inactive'
 
