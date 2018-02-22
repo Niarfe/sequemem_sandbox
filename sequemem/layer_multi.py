@@ -81,30 +81,7 @@ class LayerMulti:
 
         return sorted(prediction)
 
-    def predict_with_output(self, sequence, seq_outputs=[]):
-        if type(sequence) == type(""):
-            sequence = self.sequencer(sequence)
-
-        self.reset()
-
-        if type(sequence) == type(""):
-            sequence = self.tokenize(sequence)
-        debug(sequence)
-        for k in seq_outputs:
-            
-        
-        for input in sequence:
-            self.hit(input, self.output_layer)
-
-        prediction = Neuron.global_keys("predict")
-
-        for layer in self.upstream_layers:
-            debug("() got {} hiting up with {}".format(self.name,  sequence, prediction))
-            layer.predict(prediction)
-
-        return sorted(prediction)
-
-    def hit(self, sequence, outputs=None):
+    def hit(self, sequence):
         sequence = [sequence] if type(sequence) == type("") else sequence
         assert type(sequence) == type([])
         debug("\nNEW HIT: {}".format(sequence))
@@ -112,9 +89,6 @@ class LayerMulti:
         # Gather neurons that will be set active
         act_nrns = Neuron.global_state["active"]
         all_prd_nrns = Neuron.global_state["predict"]
-
-        active_outputs = [neuron for neuron in self.output_layer]
-      
 
         is_new = True
         prd_nrns = []
@@ -141,8 +115,6 @@ class LayerMulti:
             for act_nrn in act_nrns:
                 debug("\t\tadding new neuron upstream to active")
                 act_nrn.add_upstream(nw_nrn)
-                for act_out in active_outputs:
-                    act_out.add_upstream(nw_nrn)
 
             debug("\tsetting new neuron active")
             nw_nrn.set_active()
