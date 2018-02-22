@@ -7,13 +7,20 @@ from collections import Counter
 def debug(out_str):
     return
     print("[{}]: {}".format(sys._getframe(1).f_code.co_name, out_str))
+
 class LayerMulti:
+
     def __init__(self, name="anon"):
         self.columns = defaultdict(set)
         self.output_layer = defaultdict(set)
-        self.output_layer["none"] = Neuron()
-        self.panic_neuron = Neuron()
-        self.activation_neuron = Neuron()
+        self.global_state = {
+            "active": set(),
+            "predict": set(),
+            "inactive": set()
+            }
+        self.output_layer["none"] = Neuron(self)
+        self.panic_neuron = Neuron(self)
+        self.activation_neuron = Neuron(self)
         self.is_learning = True
         self.upstream_layers = []
         self.name = name
@@ -21,6 +28,10 @@ class LayerMulti:
         self.act_nrns = []
         self.all_prd_nrns = []
         self.inactives = []
+
+
+    def global_keys(self, group):
+        return list(set([key for neuron in self.global_state[group] for key in neuron.keys]))
 
     def sequencer(self, str_rep):
         assert type(str_rep) == type(""), "sequencer type must be string"
@@ -73,7 +84,7 @@ class LayerMulti:
         for input in sequence:
             self.hit(input)
 
-        prediction = Neuron.global_keys("predict")
+        prediction = self.global_keys("predict")
 
         for layer in self.upstream_layers:
             debug("() got {} hiting up with {}".format(self.name,  sequence, prediction))
@@ -87,8 +98,8 @@ class LayerMulti:
         debug("\nNEW HIT: {}".format(sequence))
 
         # Gather neurons that will be set active
-        act_nrns = Neuron.global_state["active"]
-        all_prd_nrns = Neuron.global_state["predict"]
+        act_nrns = self.global_state["active"]
+        all_prd_nrns = self.global_state["predict"]
 
         is_new = True
         prd_nrns = []
@@ -106,7 +117,7 @@ class LayerMulti:
             if not self.is_learning:
                 return
             self.panic_neuron.set_inactive()
-            nw_nrn = Neuron()
+            nw_nrn = Neuron(self)
 
             for _key in sequence:
                 debug("\t\tadding neuron to column {}".format(_key))
@@ -124,8 +135,8 @@ class LayerMulti:
         assert type(word) != type(""), "Input to predict with light column is single word"
         self.full_reset()
         self.light_column(word)
-        active = Neuron.global_state["active"]
-        predicted = Neuron.global_state["predict"]
+        active = self.global_state["active"]
+        predicted = self.global_state["predict"]
         return active, predicted
 
 
@@ -133,7 +144,7 @@ class LayerMulti:
         assert type(word) == type(""), "Input must be a string <key>"
         self.full_reset()
         self.light_column(word)
-        predicts =  Neuron.global_state["predict"]
+        predicts =  self.global_state["predict"]
         return list(set([key for neuron in predicts for key in neuron.keys]))
 
     def reset(self):
@@ -156,7 +167,7 @@ class LayerMulti:
         self.full_reset()
         for key in lst_keys:
             self.light_column(key)
-        predicted_neurons = Neuron.global_state["predict"]
+        predicted_neurons = self.global_state["predict"]
         lst = []
         for neuron in predicted_neurons:
             [lst.append(key) for key in neuron.keys]
@@ -189,8 +200,8 @@ class LayerMulti:
 
     def full_reset(self):
         # Get them in a list first because the set changes during operation
-        actives = list(Neuron.global_state["active"])
-        predicts = list(Neuron.global_state["predict"])
+        actives = list(self.global_state["active"])
+        predicts = list(self.global_state["predict"])
         for neuron in actives:
             neuron.set_inactive()
         for neuron in predicts:
