@@ -10,6 +10,8 @@ def debug(out_str):
 class LayerMulti:
     def __init__(self, name="anon"):
         self.columns = defaultdict(set)
+        self.output_layer = defaultdict(set)
+        self.output_layer["none"] = Neuron()
         self.panic_neuron = Neuron()
         self.activation_neuron = Neuron()
         self.is_learning = True
@@ -79,20 +81,43 @@ class LayerMulti:
 
         return sorted(prediction)
 
+    def predict_with_output(self, sequence, outputs=None):
+        if type(sequence) == type(""):
+            sequence = self.sequencer(sequence)
 
-    def hit(self, column_key):
-        column_keys = [column_key] if type(column_key) == type("") else column_key
-        assert type(column_keys) == type([])
-        debug("\nNEW HIT: {}".format(column_keys))
+        self.reset()
+
+        if type(sequence) == type(""):
+            sequence = self.tokenize(sequence)
+        debug(sequence)
+
+        for input in sequence:
+            self.hit(input, outputs)
+
+        prediction = Neuron.global_keys("predict")
+
+        for layer in self.upstream_layers:
+            debug("() got {} hiting up with {}".format(self.name,  sequence, prediction))
+            layer.predict(prediction)
+
+        return sorted(prediction)
+
+    def hit(self, sequence, outputs=None):
+        sequence = [sequence] if type(sequence) == type("") else sequence
+        assert type(sequence) == type([])
+        debug("\nNEW HIT: {}".format(sequence))
 
         # Gather neurons that will be set active
         act_nrns = Neuron.global_state["active"]
         all_prd_nrns = Neuron.global_state["predict"]
 
+        active_outputs = [neuron for neuron in self.output_layer]
+      
+
         is_new = True
         prd_nrns = []
         for prd_neuron in all_prd_nrns:
-            if prd_neuron.get_keys() == set(column_key):
+            if prd_neuron.get_keys() == set(sequence):
                 debug("pattern {} is a match!".format(prd_neuron.get_keys()))
                 prd_neuron.set_active()
                 self.panic_neuron.set_inactive()
@@ -101,19 +126,21 @@ class LayerMulti:
 
         # UPDATE
         if is_new:
-            debug("pattern match not found for {}".format(column_key))
+            debug("pattern match not found for {}".format(sequence))
             if not self.is_learning:
                 return
             self.panic_neuron.set_inactive()
             nw_nrn = Neuron()
 
-            for _key in column_keys:
+            for _key in sequence:
                 debug("\t\tadding neuron to column {}".format(_key))
                 nw_nrn.add_key(_key)
                 self.columns[_key].add(nw_nrn)
             for act_nrn in act_nrns:
                 debug("\t\tadding new neuron upstream to active")
                 act_nrn.add_upstream(nw_nrn)
+                for act_out in active_outputs:
+                    act_out.add_upstream(nw_nrn)
 
             debug("\tsetting new neuron active")
             nw_nrn.set_active()
