@@ -1,19 +1,19 @@
 from collections import defaultdict
 import sys
 from neuron import *
-from layer_output import LayerOutput
+#from layer_output import LayerOutput
 
 from collections import Counter
 
 def debug(out_str):
-    return
+    #return
     print("[{}]: {}".format(sys._getframe(1).f_code.co_name, out_str))
 
 class Sequemem:
 
     def __init__(self, name="anon"):
         self.columns = defaultdict(set)
-        self.output_layer = LayerOutput()
+        #self.output_layer = LayerOutput()
         self.output = None
         self.global_state = {
             "active": set(),
@@ -69,13 +69,14 @@ class Sequemem:
 
         return self.predict([word, ["is"]])
 
-    def predict(self, sequence, output):
+    def predict(self, sequence, output=None):
+        print("\n##### PREDICT START NEW SEQUENCE ######")
         self.output = output
         if type(sequence) == type(""):
             sequence = self.sequencer(sequence)
 
         self.reset()
-
+        #self.activation_neuron.set_active()
         debug(sequence)
 
         for input in sequence:
@@ -92,31 +93,55 @@ class Sequemem:
     def hit(self, sequence):
         sequence = [sequence] if type(sequence) == type("") else sequence
         assert type(sequence) == type([])
-        debug("\nNEW HIT: {}".format(sequence))
+        #debug("\nNEW HIT: {}".format(sequence))
+
+        print("\n***** HOW WE FOUND HIT for {} *****".format(sequence))
+        self.show_status()
+        print(" ***** END HOW WE FOUND IT ********")
+        # Gather neurons that will be turned off this cycle
+        act_nrns = self.global_state["active"]
+        assert len(act_nrns) > 0, "A There should always be at least 1 active nrn"
 
         # Gather neurons that will be set active
-        act_nrns = self.global_state["active"]
         all_prd_nrns = self.global_state["predict"]
-        out_nrns = self.output_layer.global_state["active"]
+
+        copy_act_nrns = [nrn for nrn in act_nrns]
+        copy_all_prd_nrns = [nrn for nrn in all_prd_nrns]
+
+        #out_nrns = self.output_layer.global_state["active"]
 
         is_new = True
         prd_nrns = []
         for prd_neuron in all_prd_nrns:
             if prd_neuron.get_keys() == set(sequence):
+                for nrn in copy_act_nrns:
+                    nrn.set_inactive()
                 debug("pattern {} is a match!".format(prd_neuron.get_keys()))
                 prd_neuron.set_active()
                 self.panic_neuron.set_inactive()
                 is_new = False
                 break
 
+
+
+        # for nrn in copy_all_prd_nrns:
+        #     nrn.set_inactive()
+
+
         # UPDATE
-        if is_new:
+        if is_new and self.is_learning:
+            for nrn in copy_act_nrns:
+                nrn.set_inactive()
+            print("\n***** THERE SHOULD BE NO ACTIVES *****")
+            self.show_status()
+            print(" ***** END NO ACTIVE ZONE ********")
+
             debug("pattern match not found for {}".format(sequence))
             if not self.is_learning:
                 return
-            self.panic_neuron.set_active()
+            #self.panic_neuron.set_active()
 
-            self.output_layer.set_outputs_active(self.output)
+            #self.output_layer.set_outputs_active(self.output)
             nw_nrn = Neuron(self)
 
             for _key in sequence:
@@ -124,13 +149,18 @@ class Sequemem:
                 nw_nrn.add_key(_key)
                 self.columns[_key].add(nw_nrn)
 
-            for act_nrn in act_nrns:
+            assert len(copy_act_nrns) > 0, "There should always be at least 1 active nrn"
+            for act_nrn in copy_act_nrns:
                 debug("\t\tadding new neuron upstream to active")
                 act_nrn.add_upstream(nw_nrn)
 
 
             debug("\tsetting new neuron active")
             nw_nrn.set_active()
+        print("\nHOW WE LEFT IT")
+        self.show_status()
+        print("END HOW WE LEFT IT")
+        assert len(self.global_state["active"]) > 0, "Do not leave hit with no actives"
 
 
     def initialize_with_single_column_lit(self, word):

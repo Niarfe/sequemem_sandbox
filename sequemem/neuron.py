@@ -42,6 +42,7 @@ class Neuron:
         if self.state == 'predict':
             return
         elif self.state == 'active':
+            return
             raise "active neuron can't be set to predict"
         elif self.state == 'inactive':
             self.transition("inactive", "predict")
@@ -64,7 +65,7 @@ class Neuron:
 
 
     def add_upstream(self, neuron):
-        neuron.add_downstream(self)
+        #neuron.add_downstream(self)
         self.ns_upstream.append(neuron)
 
     def add_downstream(self, neuron):

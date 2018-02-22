@@ -2,7 +2,8 @@ import sys
 sys.path.append("./sequemem")
 #from layer import *
 from neuron import Neuron
-from layer_multi import LayerMulti as Layer
+#from layer_multi import LayerMulti as Layer
+from sequemem import Sequemem as Layer
 def tokenize(sentence):
     return [word.strip('\t\n\r .') for word in sentence.split(' ')]
 

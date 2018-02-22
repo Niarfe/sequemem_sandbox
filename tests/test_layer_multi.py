@@ -1,8 +1,9 @@
 import sys
 sys.path.append("./sequemem")
 from neuron import *
-from layer import *
-from layer_multi import *
+# from layer import *
+# from layer_multi import *
+from sequemem import Sequemem as LayerMulti
 import random
 
 def tokenize(sentence):
