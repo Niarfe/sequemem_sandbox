@@ -21,14 +21,19 @@ class LayerSimpleOutput:
                 lwinners.append(neuron)
         return lwinners
 
-    def get_set_of_predicted(self, threshold):
+    def get_set_of_predicted(self, threshold, nsb=False):
         predicts = set()
+        ns = set()
         winners = self.get_with_threshold(threshold)
         for winner in winners:
            for npreds in winner.ns_upstream:
+               ns.add(npreds)
                for key in npreds.keys:
                    predicts.add(key)
-        return predicts
+        if nsb:
+            return ns
+        else:
+            return predicts
 
     def set_outputs_active(self, outputs):
         for key in outputs:

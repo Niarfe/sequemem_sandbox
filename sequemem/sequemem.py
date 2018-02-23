@@ -2,6 +2,7 @@ from collections import defaultdict
 import sys
 from neuron import *
 from layer_output import LayerOutput
+from layer_output import LayerSimpleOutput
 
 from collections import Counter
 
@@ -13,7 +14,7 @@ class Sequemem:
 
     def __init__(self, name="anon"):
         self.columns = defaultdict(set)
-        self.output_layer = LayerOutput()
+        self.output_layer = LayerSimpleOutput()
         self.output = None
         self.global_state = {
             "active": set(),
@@ -91,6 +92,7 @@ class Sequemem:
             sequence = self.sequencer(sequence)
 
         self.output_layer.reset()
+        self.output_layer.clear("predict")
         self.reset()
         debug(sequence)
 
@@ -101,28 +103,16 @@ class Sequemem:
         ## FINAL BIT!
 
         prediction = self.global_keys("predict")
-        pred_nns = set(list(self.global_state["predict"]))
-        print("==============")
-        print("before", self.output_layer.predicted_keys(), self.output_layer.active_keys(), pred_nns)
-        out_preds_keys = self.output_layer.global_keys("predict")
-        if len(out_preds_keys) == 0:
-            return sorted(prediction)
+        for n in self.output_layer.global_state["predict"]:
+            print("THE TRUTH IS HERE>>>", n.keys, n.predict_times)
 
-        self.full_reset()
-        assert len(self.global_state["predict"]) == 0
-        print("reset",self.output_layer.predicted_keys(), self.output_layer.active_keys(),self.global_keys("predict"))
-        if len(as_context) > 0:
-            self.output_layer.set_active(as_context)
-        else:
-            self.output_layer.set_active(out_preds_keys)
-        print("activated",self.output_layer.predicted_keys(), self.output_layer.active_keys(),self.global_keys("predict"))
+        predns = self.global_state["predict"]
+        pout = self.output_layer.get_set_of_predicted(1,True)
+        print("PPPOOOUUUUUT",pout)
+        finals = predns.intersection(pout)
+        print("FIIIIINNNNNNALLLLS", finals)
+        #prediction = [key for n in finals for key in n.keys]
 
-        prediction2 = self.global_keys("predict")
-        pred_nns2 = set(list(self.global_state["predict"]))
-        print("final",self.output_layer.predicted_keys(), self.output_layer.active_keys(),pred_nns2)
-        print("FINALLY:", pred_nns.intersection(pred_nns2))
-        final_prediction = pred_nns.intersection(pred_nns2)
-        prediction = [key for neuron in final_prediction for key in neuron.keys]
         return sorted(prediction)
 
     def hit(self, sequence):
