@@ -11,6 +11,15 @@ class LayerSimpleOutput:
             "predict": set()
         }
 
+    def is_empty(self):
+        count= 0
+        for _, set_state in self.global_state.items():
+            count += len(set_state)
+        if count == 0:
+            return True
+        else:
+            return False
+
     def global_keys(self, group):
         return list(set([key for neuron in self.global_state[group] for key in neuron.keys]))
 

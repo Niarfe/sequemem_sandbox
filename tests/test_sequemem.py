@@ -37,7 +37,7 @@ def test_simple_out_layer():
 
     nsequ = simpout.get_neuron("sequ")
     nfibo = simpout.get_neuron("fibo")
-
+    simpout.reset()
     ## This is the part you embed into sequemem::hit LEARN
     for n in lsequ:
         n.add_upstream(nsequ)
@@ -108,15 +108,15 @@ def test_sequemem():
     brain.predict(["0", "1", "1"], ["xor"])
     brain.predict(["0", "0", "0"], ["xor"])
     print(" XXXXXXXXXXXXXXXX  CHECK IF LEARNED XXXXXXXXXXXXXX")
-    assert brain.predict(["1", "1"], ["and"]) == ["1"]
-    assert brain.predict(["1", "0"], ["and"]) == ["0"]
-    assert brain.predict(["0", "1"], ["and"]) == ["0"]
-    assert brain.predict(["0", "0"], ["and"]) == ["0"]
-    assert brain.predict(["1", "1"], ["or"]) == ["1"]
-    assert brain.predict(["1", "0"], ["or"]) == ["1"]
-    assert brain.predict(["0", "1"], ["or"]) == ["1"]
-    assert brain.predict(["0", "0"], ["or"]) == ["0"]
-    assert brain.predict(["1", "1"], ["xor"]) == ["0"]
-    assert brain.predict(["1", "0"], ["xor"]) == ["1"]
-    assert brain.predict(["0", "1"], ["xor"]) == ["1"]
-    assert brain.predict(["0", "0"], ["xor"]) == ["0"]
+    assert brain.predict(["1", "1"], [],["and"]) == ["1"]
+    assert brain.predict(["1", "0"], [],["and"]) == ["0"]
+    assert brain.predict(["0", "1"], [],["and"]) == ["0"]
+    assert brain.predict(["0", "0"], [],["and"]) == ["0"]
+    assert brain.predict(["1", "1"], [],["or"]) == ["1"]
+    assert brain.predict(["1", "0"], [],["or"]) == ["1"]
+    assert brain.predict(["0", "1"], [],["or"]) == ["1"]
+    assert brain.predict(["0", "0"], [],["or"]) == ["0"]
+    assert brain.predict(["1", "1"], [],["xor"]) == ["0"]
+    assert brain.predict(["1", "0"], [],["xor"]) == ["1"]
+    assert brain.predict(["0", "1"], [],["xor"]) == ["1"]
+    assert brain.predict(["0", "0"], [],["xor"]) == ["0"]

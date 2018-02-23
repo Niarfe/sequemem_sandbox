@@ -79,7 +79,7 @@ class Sequemem:
         return self.predict([word, ["is"]])
 
     def predict(self, sequence, output=[], as_context=[]):
-        print("\n##### PREDICT START NEW SEQUENCE ######")
+        print("\n##### PREDICT START NEW SEQUENCE ###### {}".format(sequence))
         self.output = output
         assert type(self.output) == type([]), "Passed in output must be a list"
         if len(output) > 0:
@@ -92,13 +92,13 @@ class Sequemem:
             sequence = self.sequencer(sequence)
 
         self.output_layer.reset()
-        self.output_layer.clear("predict")
         self.reset()
         debug(sequence)
 
         for input in sequence:
             self.hit(input)
-            print("post-hit", self.output_layer.predicted_keys(), self.output_layer.active_keys())
+            for n in self.output_layer.global_state["predict"]:
+                print("THE TRUTH IS HID HERE>>>", n.keys, n.predict_times)
 
         ## FINAL BIT!
 
@@ -107,11 +107,17 @@ class Sequemem:
             print("THE TRUTH IS HERE>>>", n.keys, n.predict_times)
 
         predns = self.global_state["predict"]
+        if len(as_context) > 0:
+            self.output_layer.reset()
+            predn = self.output_layer.get_neuron(as_context[0])
+            predn.set_predict()
+
         pout = self.output_layer.get_set_of_predicted(1,True)
         print("PPPOOOUUUUUT",pout)
         finals = predns.intersection(pout)
         print("FIIIIINNNNNNALLLLS", finals)
-        #prediction = [key for n in finals for key in n.keys]
+        if not self.output_layer.is_empty():
+            prediction = [key for n in finals for key in n.keys]
 
         return sorted(prediction)
 
@@ -134,6 +140,7 @@ class Sequemem:
         copy_all_prd_nrns = [nrn for nrn in all_prd_nrns]
 
         is_new = True
+
         prd_nrns = []
         for prd_neuron in all_prd_nrns:
             if prd_neuron.get_keys() == set(sequence):
@@ -141,6 +148,12 @@ class Sequemem:
                     nrn.set_inactive()
                 debug("pattern {} is a match!".format(prd_neuron.get_keys()))
                 prd_neuron.set_active()
+                if len(self.output) > 0:
+                    out_nrn = self.output_layer.get_neuron(self.output[0])
+                    debug("OUTPUT NEURONS HERE->{}".format(out_nrn))
+                    debug("\t\tadding output neurons upstream to new neuron")
+                    out_nrn.add_upstream(prd_neuron)
+                    prd_neuron.add_upstream(out_nrn)
                 self.panic_neuron.set_inactive()
                 is_new = False
                 break
@@ -170,12 +183,13 @@ class Sequemem:
             assert nw_nrn.state == "active"
 
             # output connecting section
-            out_nrns = self.output_layer.get_neurons(self.output)
-            debug("OUTPUT NEURONS HERE->{}".format(out_nrns))
-            for onrn in out_nrns:
+            if len(self.output) > 0:
+                out_nrn = self.output_layer.get_neuron(self.output[0])
+                debug("OUTPUT NEURONS HERE->{}".format(out_nrn))
+                #for onrn in out_nrns:
                 debug("\t\tadding output neurons upstream to new neuron")
-                onrn.add_upstream(nw_nrn)
-                nw_nrn.add_upstream(onrn)
+                out_nrn.add_upstream(nw_nrn)
+                nw_nrn.add_upstream(out_nrn)
 
         # print("-------\tHOW WE LEFT IT")
         # self.show_status()
