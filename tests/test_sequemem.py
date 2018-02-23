@@ -11,6 +11,23 @@ def tokenize(sentence):
 def test_tokenize():
     assert tokenize("we are") == ["we", "are"]
 
+def test_simple_sequemem():
+    brain = Sequemem("sequemem")
+
+    brain.predict(["1", "1","1"], ["ones"])
+    brain.predict(["0", "0","0"], ["zero"])
+
+    print("######### BEGIN TEST ASSERTS ###########")
+    print("########################################")
+    assert brain.predict(["1", "1"], []) == ["1"]
+    assert brain.predict(["0", "0"], []) == ["0"]
+
+    brain.predict(["1", "1","0"], ["ones"])
+    assert brain.predict(["1", "1"], []) == ["0", "1"]
+    assert sorted(brain.get_output_layer_keys()) == sorted([[],['ones']])
+    brain.predict(["0","0","0"], [])
+    assert sorted(brain.get_output_layer_keys()) == sorted([[],['zero']])
+
 
 def test_sequemem():
     brain = Sequemem("sequemem")
@@ -27,16 +44,16 @@ def test_sequemem():
     brain.predict(["1", "0", "1"], ["xor"])
     brain.predict(["0", "1", "1"], ["xor"])
     brain.predict(["0", "0", "0"], ["xor"])
-
-    assert brain.predict(["1", "1"], "and") == ["1"]
-    assert brain.predict(["1", "0"], "and") == ["0"]
-    assert brain.predict(["0", "1"], "and") == ["0"]
-    assert brain.predict(["0", "0"], "and") == ["0"]
-    assert brain.predict(["1", "1"], "or") == ["1"]
-    assert brain.predict(["1", "0"], "or") == ["1"]
-    assert brain.predict(["0", "1"], "or") == ["1"]
-    assert brain.predict(["0", "0"], "or") == ["0"]
-    assert brain.predict(["1", "1"], "xor") == ["0"]
-    assert brain.predict(["1", "0"], "xor") == ["1"]
-    assert brain.predict(["0", "1"], "xor") == ["1"]
-    assert brain.predict(["0", "0"], "xor") == ["0"]
+    print(" XXXXXXXXXXXXXXXX  CHECK IF LEARNED XXXXXXXXXXXXXX")
+    assert brain.predict(["1", "1"], ["and"]) == ["1"]
+    assert brain.predict(["1", "0"], ["and"]) == ["0"]
+    assert brain.predict(["0", "1"], ["and"]) == ["0"]
+    assert brain.predict(["0", "0"], ["and"]) == ["0"]
+    assert brain.predict(["1", "1"], ["or"]) == ["1"]
+    assert brain.predict(["1", "0"], ["or"]) == ["1"]
+    assert brain.predict(["0", "1"], ["or"]) == ["1"]
+    assert brain.predict(["0", "0"], ["or"]) == ["0"]
+    assert brain.predict(["1", "1"], ["xor"]) == ["0"]
+    assert brain.predict(["1", "0"], ["xor"]) == ["1"]
+    assert brain.predict(["0", "1"], ["xor"]) == ["1"]
+    assert brain.predict(["0", "0"], ["xor"]) == ["0"]

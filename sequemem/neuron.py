@@ -6,7 +6,7 @@ class Neuron:
         self.ns_downstream = []
         self.ns_upstream = []
         self.keys = set()
-        print(self.layer)
+        #print(self.layer)
         self.layer.global_state["inactive"].add(self)
         self.state = 'inactive'
 
@@ -65,14 +65,13 @@ class Neuron:
 
 
     def add_upstream(self, neuron):
-        #neuron.add_downstream(self)
         self.ns_upstream.append(neuron)
 
     def add_downstream(self, neuron):
         self.ns_downstream.append(neuron)
 
     def __repr__(self):
-        return "{} state: {} keys: {}".format(self.state, self.keys)
+        return "<nrn keys: {}>".format([key for key in self.keys])
     def __str__(self):
-        return "{} state: {} keys: {}".format(self.state, self.keys)
+        return "<nrn keys: {}>".format([key for key in self.keys])
 

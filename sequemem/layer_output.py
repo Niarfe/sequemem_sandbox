@@ -10,11 +10,32 @@ class LayerOutput:
             "predict": set()
         }
 
+    def global_keys(self, group):
+        return list(set([key for neuron in self.global_state[group] for key in neuron.keys]))
+
     def set_outputs_active(self, outputs):
         for key in outputs:
             if key not in self.neurons.keys():
-                self.add_new(Neuron(self))
-                self.neurons[key].set_active()
+                self.add_new(key)
+            self.neurons[key].set_active()
+
+
+    def activate_predicted(self):
+        pred_nns = self.global_state["predict"]
+        lst_nns = [nn for nn in pred_nns]
+        for nn in lst_nns:
+            nn.set_active()
+
+    def reset(self):
+        states = ["active", "predict"]
+        for state in states:
+            self.clear(state)
+
+    def clear(self, state):
+        lst_nrns = [nrn for nrn in self.global_state[state]]
+        for nrn in lst_nrns:
+            nrn.set_inactive()
+        assert len(self.global_state[state]) == 0, "LayerOutput clear failed!"
 
     def transition(self, neuron, state_from, state_to):
         self.global_state[state_from].remove(neuron)
@@ -22,15 +43,18 @@ class LayerOutput:
 
     def add_new(self, str_key):
         if str_key in self.neurons.keys():
-            print("{} already exists".format(str_key))
+            #print("{} already exists".format(str_key))
             return
         else:
             neuron = Neuron(self)
+            neuron.add_key(str_key)
             self.neurons[str_key] = neuron
             self.global_state["inactive"].add(neuron)
 
     def get_neuron(self, str_key):
         return self.neurons[str_key]
+    def get_neurons(self, lst_keys):
+        return [self.neurons[str_key] for str_key in lst_keys]
 
     def set_active(self, lst_keys):
         for key in lst_keys:
@@ -38,3 +62,9 @@ class LayerOutput:
             n.set_active()
     def active_keys(self):
         return list(set([k for neuron in self.global_state["active"] for k in neuron.keys]))
+    def predicted_keys(self):
+        return list(set([k for neuron in self.global_state["predict"] for k in neuron.keys]))
+    def __repr__(self):
+        return "OutputLayer: {}".format(self.global_state)
+    def __str__(self):
+        return "OutputLayer: {}".format(self.global_state)
