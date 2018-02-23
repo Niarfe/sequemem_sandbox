@@ -1,8 +1,9 @@
 import sys
 sys.path.append("./sequemem")
 from neuron import *
-from layer import *
-from layer_multi import *
+# from layer import *
+# from layer_multi import *
+from sequemem import Sequemem as LayerMulti
 import random
 
 def tokenize(sentence):
@@ -15,7 +16,7 @@ def test_sequencer():
     layer = LayerMulti()
     assert layer.sequencer("this is a string") == [["this"], ["is"],["a"],["string"]]
 
-def test_sequencer_actually_works_with_layer():
+# def test_sequencer_actually_works_with_layer():
     layer = LayerMulti()
     layer.predict("this is a sequence")
     assert layer.predict("this is a") == ["sequence"]

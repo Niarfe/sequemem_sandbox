@@ -1,6 +1,8 @@
 from collections import defaultdict
 import sys
 from neuron import *
+from layer_output import LayerOutput
+from layer_output import LayerSimpleOutput
 
 from collections import Counter
 
@@ -8,17 +10,17 @@ def debug(out_str):
     return
     print("[{}]: {}".format(sys._getframe(1).f_code.co_name, out_str))
 
-class LayerMulti:
+class Sequemem:
 
     def __init__(self, name="anon"):
         self.columns = defaultdict(set)
-        self.output_layer = defaultdict(set)
+        self.output_layer = LayerSimpleOutput()
+        self.output = None
         self.global_state = {
             "active": set(),
             "predict": set(),
             "inactive": set()
             }
-        self.output_layer["none"] = Neuron(self)
         self.panic_neuron = Neuron(self)
         self.activation_neuron = Neuron(self)
         self.is_learning = True
@@ -29,6 +31,14 @@ class LayerMulti:
         self.all_prd_nrns = []
         self.inactives = []
 
+    def get_output_layer_keys(self):
+        actives = [key
+            for nrn in self.output_layer.global_state["active"]
+            for key in nrn.keys]
+        predict = [key
+            for nrn in self.output_layer.global_state["predict"]
+            for key in nrn.keys]
+        return [actives, predict]
 
     def global_keys(self, group):
         return list(set([key for neuron in self.global_state[group] for key in neuron.keys]))
@@ -68,67 +78,125 @@ class LayerMulti:
 
         return self.predict([word, ["is"]])
 
-    def predict(self, sequence, any_match=False):
+    def predict(self, sequence, output=[], as_context=[]):
+        print("\n##### PREDICT START NEW SEQUENCE ###### {}".format(sequence))
+        self.output = output
+        assert type(self.output) == type([]), "Passed in output must be a list"
+        if len(output) > 0:
+            for out in output:
+                self.output_layer.add_new(out)
+
+
+
         if type(sequence) == type(""):
             sequence = self.sequencer(sequence)
 
-        if any_match:
-            self.reset_any_match()
-        else:
-            self.reset()
-
-        if type(sequence) == type(""):
-            sequence = self.tokenize(sequence)
+        self.output_layer.reset()
+        self.reset()
         debug(sequence)
 
         for input in sequence:
             self.hit(input)
+            for n in self.output_layer.global_state["predict"]:
+                print("THE TRUTH IS HID HERE>>>", n.keys, n.predict_times)
+
+        ## FINAL BIT!
 
         prediction = self.global_keys("predict")
+        for n in self.output_layer.global_state["predict"]:
+            print("THE TRUTH IS HERE>>>", n.keys, n.predict_times)
 
-        for layer in self.upstream_layers:
-            debug("() got {} hiting up with {}".format(self.name,  sequence, prediction))
-            layer.predict(prediction)
+        predns = self.global_state["predict"]
+        if len(as_context) > 0:
+            self.output_layer.reset()
+            predn = self.output_layer.get_neuron(as_context[0])
+            predn.set_predict()
+
+        pout = self.output_layer.get_set_of_predicted(1,True)
+        print("PPPOOOUUUUUT",pout)
+        finals = predns.intersection(pout)
+        print("FIIIIINNNNNNALLLLS", finals)
+        if not self.output_layer.is_empty():
+            prediction = [key for n in finals for key in n.keys]
 
         return sorted(prediction)
 
     def hit(self, sequence):
         sequence = [sequence] if type(sequence) == type("") else sequence
         assert type(sequence) == type([])
-        debug("\nNEW HIT: {}".format(sequence))
+        print("\nNEW HIT: {}".format(sequence))
+
+        # print("\n***** HOW WE FOUND HIT for {} *****".format(sequence))
+        # self.show_status()
+        # print(" ***** END HOW WE FOUND IT ********")
+        # Gather neurons that will be turned off this cycle
+        act_nrns = self.global_state["active"]
+        assert len(act_nrns) > 0, "A There should always be at least 1 active nrn"
 
         # Gather neurons that will be set active
-        act_nrns = self.global_state["active"]
         all_prd_nrns = self.global_state["predict"]
 
+        copy_act_nrns = [nrn for nrn in act_nrns]
+        copy_all_prd_nrns = [nrn for nrn in all_prd_nrns]
+
         is_new = True
+
         prd_nrns = []
         for prd_neuron in all_prd_nrns:
             if prd_neuron.get_keys() == set(sequence):
+                for nrn in copy_act_nrns:
+                    nrn.set_inactive()
                 debug("pattern {} is a match!".format(prd_neuron.get_keys()))
                 prd_neuron.set_active()
+                if len(self.output) > 0:
+                    out_nrn = self.output_layer.get_neuron(self.output[0])
+                    debug("OUTPUT NEURONS HERE->{}".format(out_nrn))
+                    debug("\t\tadding output neurons upstream to new neuron")
+                    out_nrn.add_upstream(prd_neuron)
+                    prd_neuron.add_upstream(out_nrn)
                 self.panic_neuron.set_inactive()
                 is_new = False
                 break
 
         # UPDATE
-        if is_new:
+        if is_new and self.is_learning:
             debug("pattern match not found for {}".format(sequence))
-            if not self.is_learning:
-                return
-            self.panic_neuron.set_inactive()
+            for nrn in copy_act_nrns:
+                nrn.set_inactive()
+            assert len(self.global_state["active"]) == 0, "Everything should be off here"
+
             nw_nrn = Neuron(self)
 
             for _key in sequence:
                 debug("\t\tadding neuron to column {}".format(_key))
                 nw_nrn.add_key(_key)
                 self.columns[_key].add(nw_nrn)
-            for act_nrn in act_nrns:
+
+            assert len(copy_act_nrns) > 0, "There should always be at least 1 active nrn"
+
+            for act_nrn in copy_act_nrns:
                 debug("\t\tadding new neuron upstream to active")
                 act_nrn.add_upstream(nw_nrn)
 
             debug("\tsetting new neuron active")
             nw_nrn.set_active()
+            assert nw_nrn.state == "active"
+
+            # output connecting section
+            if len(self.output) > 0:
+                out_nrn = self.output_layer.get_neuron(self.output[0])
+                debug("OUTPUT NEURONS HERE->{}".format(out_nrn))
+                #for onrn in out_nrns:
+                debug("\t\tadding output neurons upstream to new neuron")
+                out_nrn.add_upstream(nw_nrn)
+                nw_nrn.add_upstream(out_nrn)
+
+        # print("-------\tHOW WE LEFT IT")
+        # self.show_status()
+        # print("\tOUTPUTS: {}".format(self.output))
+        # print("\tEXT OUTPUTS LAYER: {}".format(self.output_layer))
+        # print("\tEND HOW WE LEFT IT")
+        assert len(self.global_state["active"]) > 0, "Do not leave hit with no actives"
 
 
     def initialize_with_single_column_lit(self, word):
@@ -206,6 +274,8 @@ class LayerMulti:
             neuron.set_inactive()
         for neuron in predicts:
             neuron.set_inactive()
+        assert len(self.global_state["active"]) == 0, "Full rest failed on actives"
+        assert len(self.global_state["predict"]) == 0, "Full reset failed on predicted"
 
     def light_column(self, key):
         for neuron in self.columns[key]:
