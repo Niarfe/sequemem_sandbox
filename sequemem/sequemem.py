@@ -11,8 +11,6 @@ def debug(out_str):
 
 
 
-
-
 class Sequemem:
 
     def __init__(self, name="anon"):

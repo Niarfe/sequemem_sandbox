@@ -1,28 +1,22 @@
 import sys
 sys.path.append("./sequemem")
 from neuron import *
-from sequemem import Sequemem as LayerMulti
+from sequemem import Sequemem
 import random
 
-def tokenize(sentence):
-    return [word.strip('\t\n\r .') for word in sentence.split(' ')]
-
-def test_tokenize():
-    assert tokenize("we are") == ["we", "are"]
-
 def test_sequencer():
-    layer = LayerMulti()
+    layer = Sequemem()
     assert layer.sequencer("this is a string") == [["this"], ["is"],["a"],["string"]]
 
 def test_sequencer_actually_works_with_layer():
-    layer = LayerMulti()
+    layer = Sequemem()
     layer.predict("this is a sequence")
     assert layer.predict("this is a") == ["sequence"]
     layer.predict("this is a foobar")
     assert layer.predict("this is a") == ["foobar", "sequence"]
 
 def test_should_behave_as_it_was_sequenced():
-    layer = LayerMulti()
+    layer = Sequemem()
     sentence = layer.sequencer("this is a sequence")
     layer.predict(sentence)
     assert layer.predict("this is a") == ["sequence"]
@@ -33,7 +27,7 @@ def test_should_behave_as_it_was_sequenced():
 
 
 def test_clarify_behavior_with_array_of_arryas():
-    layer = LayerMulti()
+    layer = Sequemem()
     sentence = [["this is"], ["a sequence"]]
     layer.predict(sentence)
     assert layer.predict([["this is"]]) == ["a sequence"]
@@ -43,14 +37,14 @@ def test_clarify_behavior_with_array_of_arryas():
     assert sorted(layer.predict([["this is"]])) == ["a foobar", "a sequence"]
 
 def test_layer_multi_basic_two_step():
-    layer = LayerMulti()
+    layer = Sequemem()
 
     layer.predict([['a','b'], ['A','B']])
     layer.show_status()
     assert layer.predict([['a','b']]) == ['A','B']
 
 def test_layer_multi_triple():
-    layer = LayerMulti()
+    layer = Sequemem()
 
     sequence = [
         ['a','b'],
@@ -63,7 +57,7 @@ def test_layer_multi_triple():
     assert layer.predict(sequence[:2]) == sequence[2]
 
 def test_layer_multi_triple_imbalanced():
-    layer = LayerMulti()
+    layer = Sequemem()
 
     sequence = [
         ['a','b'],
@@ -76,7 +70,7 @@ def test_layer_multi_triple_imbalanced():
     assert layer.predict(sequence[:2]) == sequence[2]
 
 def test_different_sequence_mid_retrieval():
-    layer = LayerMulti("multi")
+    layer = Sequemem("multi")
 
     sequence1 = [
         ['a','b'],
@@ -102,7 +96,7 @@ def test_different_sequence_mid_retrieval():
     assert sorted(layer.predict(sequence2[:2])) == sorted(['d'])
 
 def test_different_sequence_end_points():
-    layer = LayerMulti("multi")
+    layer = Sequemem("multi")
 
     sequence1 = [
         ['a','b'],
@@ -128,7 +122,7 @@ def test_different_sequence_end_points():
     assert sorted(layer.predict(sequence2[:2])) == sorted(['e'])
 
 def test_several_sentences():
-    layer = LayerMulti()
+    layer = Sequemem()
     layer.train_from_file('data/cortical_example1.1.txt')
     print("\n=============\n")
     sentence = [["fox"], ["eat"]]
@@ -152,7 +146,7 @@ def test_several_sentences():
 
 
 def test_prep_prediction_new():
-    layer = LayerMulti()
+    layer = Sequemem()
     layer.train_from_file('data/cortical_example1.1.txt')
 
     animal = "fox"

@@ -1,22 +1,15 @@
 import sys
 sys.path.append("./sequemem")
-#from layer import *
 from neuron import Neuron
-#from layer_multi import LayerMulti as Layer
-from sequemem import Sequemem as Layer
-def tokenize(sentence):
-    return [word.strip('\t\n\r .') for word in sentence.split(' ')]
-
-def test_tokenize():
-    assert tokenize("we are") == ["we", "are"]
+from sequemem import Sequemem
 
 
 def test_ccn_layer():
-    input_layer = Layer("input")
-    conv_verb = Layer("verb")
-    conv_agent = Layer("agent")
-    conv_noun = Layer("noun")
-    conv_agent_verb_noun = Layer("avn")
+    input_layer = Sequemem("input")
+    conv_verb = Sequemem("verb")
+    conv_agent = Sequemem("agent")
+    conv_noun = Sequemem("noun")
+    conv_agent_verb_noun = Sequemem("avn")
 
     conv_verb.predict("ate <verb>")
     conv_noun.predict("pizza <noun>")
@@ -52,7 +45,7 @@ def test_ccn_layer():
     assert True
 
 def test_layer_inactive():
-    layer = Layer()
+    layer = Sequemem()
     layer.predict("test")
     layer.set_learning(False)
 
@@ -61,7 +54,7 @@ def test_layer_inactive():
     assert layer.predict("test") == []
 
 def test_layer_create():
-    layer = Layer()
+    layer = Sequemem()
     assert len(layer.column_keys()) == len([])
     prediction = layer.predict([["this"]])
     layer.show_status()
@@ -71,7 +64,7 @@ def test_layer_create():
 
 
 def test_layer_create_two_words():
-    layer = Layer()
+    layer = Sequemem()
     assert layer.column_keys() == []
     prediction = layer.predict([["are"],["we"]])
     assert sorted(layer.column_keys()) == sorted(["are","we"])
@@ -79,7 +72,7 @@ def test_layer_create_two_words():
 
 
 def test_layer_create_two_words_predict_one():
-    layer = Layer()
+    layer = Sequemem()
     _ = layer.predict([["are"],["we"]])
     prediction = layer.predict([["are"]])
     layer.show_status()
@@ -87,7 +80,7 @@ def test_layer_create_two_words_predict_one():
 
 
 def test_layer_create_two_words_predict_3gram():
-    layer = Layer()
+    layer = Sequemem()
     _ = layer.predict([["are"],["we"],["there"]])
     prediction = layer.predict([["are"],["we"]])
     layer.show_status()
@@ -95,7 +88,7 @@ def test_layer_create_two_words_predict_3gram():
 
 
 def test_layer_create_new_second_sequence():
-    layer = Layer()
+    layer = Sequemem()
     _ = layer.predict([["are"],["we"],["there"]])
     prediction = layer.predict([["are"],["we"],["here"]])
     layer.show_status()
@@ -103,7 +96,7 @@ def test_layer_create_new_second_sequence():
 
 
 def test_layer_create_two_words_predict_two():
-    layer = Layer()
+    layer = Sequemem()
     _ = layer.predict([["are"],["we"],["there"]])
     _ = layer.predict([["are"],["we"],["here"]])
     prediction = layer.predict([["are"],["we"]])
@@ -111,10 +104,8 @@ def test_layer_create_two_words_predict_two():
     assert sorted(prediction) == sorted(["here","there"])
 
 
-
-
 def test_full_tri_gate():
-    layer = Layer()
+    layer = Sequemem()
     layer.train_from_file('data/logic_gates_no_about.txt')
     neuron_count = 0
     for key, lst in layer.columns.items():
@@ -124,7 +115,7 @@ def test_full_tri_gate():
     assert neuron_count == 13
 
 def test_sequence_layer():
-    layer = Layer()
+    layer = Sequemem()
     layer.train_from_file('data/logic_gates_no_about.txt')
     layer.reset()
     layer.show_status()
@@ -133,8 +124,8 @@ def test_sequence_layer():
     assert sorted(prediction) == ["0","1"]
 
 # def test_multiple_inputs():
-#     layer = Layer("layer")
-#     contx = Layer("context")
+#     layer = Sequemem("layer")
+#     contx = Sequemem("context")
 
 #     context = "upper"
 #     sequence = [["A"],["B"],["C"]]
@@ -187,8 +178,8 @@ def test_sequence_layer():
 
 
 # def test_classic_bass_example():
-#     layer = Layer()
-#     contx = Layer()
+#     layer = Sequemem()
+#     contx = Sequemem()
 
 #     context = ["music"]
 #     sequence = [["bass"],["is"],["instrument"]]
@@ -247,8 +238,8 @@ def test_sequence_layer():
 
 # import os
 # def test_act_in_response():
-#     inp_layer = Layer()
-#     act_layer = Layer()
+#     inp_layer = Sequemem()
+#     act_layer = Sequemem()
 
 #     insentence = "hello tex"
 #     response = "hi_this_is_the_expected_response"

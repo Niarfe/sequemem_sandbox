@@ -1,19 +1,12 @@
 import sys
 sys.path.append("./sequemem")
 from collections import Counter
-from neuron import Neuron
-from neuron import SimpleNeuron
-from layer_multi import LayerMulti as Layer
+from neuron import *
 from layer_output import LayerSimpleOutput
 from sequemem import Sequemem
-def tokenize(sentence):
-    return [word.strip('\t\n\r .') for word in sentence.split(' ')]
-
-def test_tokenize():
-    assert tokenize("we are") == ["we", "are"]
 
 def test_simple_out_layer():
-    layer = Layer()
+    layer = Sequemem()
 
     one = Neuron(layer)
     one.add_key("one")
