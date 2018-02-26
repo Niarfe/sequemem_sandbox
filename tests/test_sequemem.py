@@ -4,7 +4,6 @@ from collections import Counter
 from neuron import Neuron
 from neuron import SimpleNeuron
 from layer_multi import LayerMulti as Layer
-from layer_output import LayerOutput
 from layer_output import LayerSimpleOutput
 from sequemem import Sequemem
 def tokenize(sentence):
