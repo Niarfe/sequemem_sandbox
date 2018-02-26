@@ -1,20 +1,12 @@
 import sys
 sys.path.append("./sequemem")
-
-from neuron import Neuron
-from neuron import SimpleNeuron
-from layer_multi import LayerMulti as Layer
-from layer_output import LayerOutput
+from collections import Counter
+from neuron import *
 from layer_output import LayerSimpleOutput
 from sequemem import Sequemem
-def tokenize(sentence):
-    return [word.strip('\t\n\r .') for word in sentence.split(' ')]
-
-def test_tokenize():
-    assert tokenize("we are") == ["we", "are"]
 
 def test_simple_out_layer():
-    layer = Layer()
+    layer = Sequemem()
 
     one = Neuron(layer)
     one.add_key("one")
@@ -107,6 +99,14 @@ def test_sequemem():
     brain.predict(["1", "0", "1"], ["xor"])
     brain.predict(["0", "1", "1"], ["xor"])
     brain.predict(["0", "0", "0"], ["xor"])
+    brain.predict(["1", "1", "0"], ["nand"])
+    brain.predict(["1", "0", "1"], ["nand"])
+    brain.predict(["0", "1", "1"], ["nand"])
+    brain.predict(["0", "0", "1"], ["nand"])
+    brain.predict(["1", "1", "0"], ["nor"])
+    brain.predict(["1", "0", "0"], ["nor"])
+    brain.predict(["0", "1", "0"], ["nor"])
+    brain.predict(["0", "0", "1"], ["nor"])
     print(" XXXXXXXXXXXXXXXX  CHECK IF LEARNED XXXXXXXXXXXXXX")
     assert brain.predict(["1", "1"], [],["and"]) == ["1"]
     assert brain.predict(["1", "0"], [],["and"]) == ["0"]
@@ -120,3 +120,89 @@ def test_sequemem():
     assert brain.predict(["1", "0"], [],["xor"]) == ["1"]
     assert brain.predict(["0", "1"], [],["xor"]) == ["1"]
     assert brain.predict(["0", "0"], [],["xor"]) == ["0"]
+    assert brain.predict(["1", "1"], [],["nand"]) == ["0"]
+    assert brain.predict(["1", "0"], [],["nand"]) == ["1"]
+    assert brain.predict(["0", "1"], [],["nand"]) == ["1"]
+    assert brain.predict(["0", "0"], [],["nand"]) == ["1"]
+    assert brain.predict(["1", "1"], [],["nor"]) == ["0"]
+    assert brain.predict(["1", "0"], [],["nor"]) == ["0"]
+    assert brain.predict(["0", "1"], [],["nor"]) == ["0"]
+    assert brain.predict(["0", "0"], [],["nor"]) == ["1"]
+
+def test_sequemem_output():
+    brain = Sequemem("sequemem")
+
+    brain.predict(["1", "1", "1"], ["and"])
+    brain.predict(["1", "0", "0"], ["and"])
+    brain.predict(["0", "1", "0"], ["and"])
+    brain.predict(["0", "0", "0"], ["and"])
+    brain.predict(["1", "1", "1"], ["or"])
+    brain.predict(["1", "0", "1"], ["or"])
+    brain.predict(["0", "1", "1"], ["or"])
+    brain.predict(["0", "0", "0"], ["or"])
+    brain.predict(["1", "1", "0"], ["xor"])
+    brain.predict(["1", "0", "1"], ["xor"])
+    brain.predict(["0", "1", "1"], ["xor"])
+    brain.predict(["0", "0", "0"], ["xor"])
+    print(" XXXXXXXXXXXXXXXX  CHECK IF LEARNED XXXXXXXXXXXXXX")
+    ct = Counter()
+    brain.predict(["1", "1", "1"])
+    nand = brain.output_layer.get_neuron("and")
+    nor  = brain.output_layer.get_neuron("or")
+    nxor = brain.output_layer.get_neuron("xor")
+    assert nand.predict_times == 4
+    assert  nor.predict_times == 4
+    assert nxor.predict_times == 3
+    cand = nand.predict_times
+    cor  =  nor.predict_times
+    cxor = nxor.predict_times
+    brain.predict(["1", "0", "0"])
+    nand = brain.output_layer.get_neuron("and")
+    nor  = brain.output_layer.get_neuron("or")
+    nxor = brain.output_layer.get_neuron("xor")
+    assert nand.predict_times == 4
+    assert  nor.predict_times == 3
+    assert nxor.predict_times == 3
+    cand += nand.predict_times
+    cor  +=  nor.predict_times
+    cxor += nxor.predict_times
+    brain.predict(["0", "1", "0"])
+    nand = brain.output_layer.get_neuron("and")
+    nor  = brain.output_layer.get_neuron("or")
+    nxor = brain.output_layer.get_neuron("xor")
+    assert nand.predict_times == 4
+    assert  nor.predict_times == 3
+    assert nxor.predict_times == 3
+    cand += nand.predict_times
+    cor  +=  nor.predict_times
+    cxor += nxor.predict_times
+    brain.predict(["0", "0", "0"])
+    nand = brain.output_layer.get_neuron("and")
+    nor  = brain.output_layer.get_neuron("or")
+    nxor = brain.output_layer.get_neuron("xor")
+    assert nand.predict_times == 4
+    assert  nor.predict_times == 4
+    assert nxor.predict_times == 4
+    cand += nand.predict_times
+    cor  +=  nor.predict_times
+    cxor += nxor.predict_times
+    assert cand == 16
+    assert cor  == 14
+    assert cxor == 13
+    brain.predict(["1", "1", "1"])
+    brain.predict(["1", "0", "1"])
+    brain.predict(["0", "1", "1"])
+    brain.predict(["0", "0", "0"])
+
+    brain.predict([
+        ["1", "1", "0"],
+        ["1", "0", "1"],
+        ["0", "1", "1"],
+        ["0", "0", "0"]
+    ])
+    nand = brain.output_layer.get_neuron("and")
+    nor  = brain.output_layer.get_neuron("or")
+    nxor = brain.output_layer.get_neuron("xor")
+    assert nand.predict_times == 0
+    assert  nor.predict_times == 0
+    assert nxor.predict_times == 0

@@ -1,7 +1,6 @@
 from collections import defaultdict
 import sys
 from neuron import *
-from layer_output import LayerOutput
 from layer_output import LayerSimpleOutput
 
 from collections import Counter
@@ -9,6 +8,8 @@ from collections import Counter
 def debug(out_str):
     return
     print("[{}]: {}".format(sys._getframe(1).f_code.co_name, out_str))
+
+
 
 class Sequemem:
 
@@ -325,60 +326,3 @@ class Sequemem:
 
     def column_keys(self):
         return list(self.columns.keys())
-
-    # def get_all_actives(self):
-    #     """Get ALL active neurons, even if it's the activation neuron.
-    #         The other function gets all actives in columns only.
-    #     """
-    #     assert False, "Who's calling me?"
-    #     actives = []
-    #     if self.activation_neuron.state == 'A':
-    #         actives.append(self.activation_neuron)
-    #     for k in self.columns.keys():
-    #         colactives = self._column_get('A',k)
-    #         actives.extend(colactives)
-    #     return actives
-
-
-
-    # def _column_get(self, state, column_key):
-    #     assert False, "_column_get is deprecated"
-    #     assert type(column_key) == type("")
-    #     if not self.is_learning:
-    #         return []
-    #     return [neuron
-    #         for neuron in self.columns[column_key]
-    #         if neuron.state == state
-    #         ]
-
-    # def get_predicted(self):
-    #     assert False, "get_predicted is deprecated"
-    #     predicted = [k
-    #         for k in self.columns.keys()
-    #         if len(self._column_get('P', k)) > 0
-    #         ]
-    #     if len(predicted) > 0:
-    #         return predicted
-    #     else:
-    #         return []
-    #         #return self.columns.keys()
-
-
-
-
-
-    # def _get_neurons(self, state):
-    #     assert False, "deprecated"
-    #     return [neuron
-    #         for key in self.columns.keys()
-    #         for neuron in self._column_get(state, key)
-    #         ]
-    # def get_active_neurons(self):
-    #     assert False, "deprecated"
-    #     return self._get_neurons('A')
-    # def get_predicted_neurons(self):
-    #     assert False, "deprecated"
-    #     return self._get_neurons('P')
-
-
-
