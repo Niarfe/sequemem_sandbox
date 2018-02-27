@@ -67,7 +67,6 @@ class Sequemem:
 
     def train_from_file_group_line(self, filepath):
         with open(filepath, 'r') as source:
-
             for idx, line in enumerate(source):
                 if idx % 1000 == 0:
                     print(idx)
@@ -80,7 +79,7 @@ class Sequemem:
         return self.predict([word, ["is"]])
 
     def predict(self, sequence, output=[], as_context=[]):
-        print("\n##### PREDICT START NEW SEQUENCE ###### {}".format(sequence))
+        debug("\n##### PREDICT START NEW SEQUENCE ###### {}".format(sequence))
         self.output = output
         assert type(self.output) == type([]), "Passed in output must be a list"
         if len(output) > 0:
@@ -104,8 +103,8 @@ class Sequemem:
         ## FINAL BIT!
 
         prediction = self.global_keys("predict")
-        for n in self.output_layer.global_state["predict"]:
-            print("THE TRUTH IS HERE>>>", n.keys, n.predict_times)
+        #for n in self.output_layer.global_state["predict"]:
+            #debug("THE TRUTH IS HERE>>>", n.keys, n.predict_times)
 
         predns = self.global_state["predict"]
         if len(as_context) > 0:
@@ -114,9 +113,7 @@ class Sequemem:
             predn.set_predict()
 
         pout = self.output_layer.get_set_of_predicted(1,True)
-        print("PPPOOOUUUUUT",pout)
         finals = predns.intersection(pout)
-        print("FIIIIINNNNNNALLLLS", finals)
         if not self.output_layer.is_empty():
             prediction = [key for n in finals for key in n.keys]
 
@@ -125,7 +122,7 @@ class Sequemem:
     def hit(self, sequence):
         sequence = [sequence] if type(sequence) == type("") else sequence
         assert type(sequence) == type([])
-        print("\nNEW HIT: {}".format(sequence))
+        debug("\nNEW HIT: {}".format(sequence))
 
         # print("\n***** HOW WE FOUND HIT for {} *****".format(sequence))
         # self.show_status()
@@ -315,6 +312,7 @@ class Sequemem:
         return actives, predict
 
     def show_status(self):
+        print("DEPRECATED")
         print("\tSTATUS {}: ".format(self.name), self.activation_neuron.state)
         for key, neurons in self.columns.items():
             print(
@@ -324,5 +322,14 @@ class Sequemem:
                     )
             )
 
+    def __str__(self):
+        print("\tSQM: {}\t Act Neuron: {}".format(self.name), self.activation_neuron.state)
+        for key, neurons in self.columns.items():
+            print(
+                "\t{}:\t{}".format(
+                    key,
+                    str([neuron.state for neuron in neurons])
+                    )
+            )
     def column_keys(self):
         return list(self.columns.keys())
