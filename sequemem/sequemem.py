@@ -68,15 +68,24 @@ class Sequemem:
     def train_from_file_group_line(self, filepath):
         with open(filepath, 'r') as source:
             for idx, line in enumerate(source):
-                if idx % 1000 == 0:
-                    print(idx)
-                self.predict([[word.strip() for word in line.split(' ')]])
+                if idx % 1000 == 0: print(idx)
+                self.load( list(set(word.strip().lower() for word in line.split(' '))) )
 
     def is_like(self, word):
         if type(word) == type([]):
             assert len(word) == 1, "Multiple is_like not supported yet"
 
         return self.predict([word, ["is"]])
+
+    def load(self, sequence):
+        self.reset()
+        assert type(sequence) == type([])
+
+        nw_nrn = Neuron(self)
+        for _key in sequence:
+            debug("\t\tadding neuron to column {}".format(_key))
+            nw_nrn.add_key(_key)
+            self.columns[_key].add(nw_nrn)
 
     def predict(self, sequence, output=[], as_context=[]):
         debug("\n##### PREDICT START NEW SEQUENCE ###### {}".format(sequence))
@@ -85,8 +94,6 @@ class Sequemem:
         if len(output) > 0:
             for out in output:
                 self.output_layer.add_new(out)
-
-
 
         if type(sequence) == type(""):
             sequence = self.sequencer(sequence)
