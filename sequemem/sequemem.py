@@ -243,7 +243,7 @@ class Sequemem:
         arr_global_f = []
         arr_spec_f   = []
         for word, count in self.get_counts_for_specific_key(the_WORD).most_common():
-            this_freq = float(count/total_spec_w)
+            this_freq = float(count/(total_spec_w + 0.01))
             if float(self.d_w_uber_freq[word]/this_freq) <= ratio:
                 arr_the_word.append(word)
                 arr_global_f.append(self.d_w_uber_freq[word])
