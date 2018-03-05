@@ -24,4 +24,5 @@ for f in files:
     print("starting: ", f)
     layer.train_from_file_group_line(f)
 
-
+layer.initialize_frequency_dict()
+layer.comparison_frequencies('morgiana', 0.05, 15, True)

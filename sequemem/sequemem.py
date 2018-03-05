@@ -2,7 +2,7 @@ from collections import defaultdict
 import sys
 from neuron import *
 from layer_output import LayerSimpleOutput
-
+import matplotlib.pyplot as plt
 from collections import Counter
 
 def debug(out_str):
@@ -31,6 +31,9 @@ class Sequemem:
         self.act_nrns = []
         self.all_prd_nrns = []
         self.inactives = []
+
+        self.total_neurons = 0
+        self.d_w_uber_freq = {}
 
     def get_output_layer_keys(self):
         actives = [key
@@ -223,6 +226,39 @@ class Sequemem:
     def reset(self):
         self.full_reset()
         self.activation_neuron.set_active()
+
+    def initialize_frequency_dict(self):
+        total_neurons = len(self.get_number_neurons_per_key())
+        d_w_uber_freq = {}
+        for word, count in self.get_number_neurons_per_key().most_common():
+            d_w_uber_freq[word] = float(count/total_neurons)
+        self.total_neurons = total_neurons
+        self.d_w_uber_freq = d_w_uber_freq
+        return total_neurons, d_w_uber_freq
+
+    def comparison_frequencies(self, the_WORD, ratio=0.05, cutoff=15, visualize_it=False):
+        word_test, total_spec_w = self.get_counts_for_specific_key(the_WORD).most_common(1)[0] # should be itself
+        print("Count for ", word_test," is ", total_spec_w)
+        arr_the_word = []
+        arr_global_f = []
+        arr_spec_f   = []
+        for word, count in self.get_counts_for_specific_key(the_WORD).most_common():
+            this_freq = float(count/total_spec_w)
+            if float(self.d_w_uber_freq[word]/this_freq) <= ratio:
+                arr_the_word.append(word)
+                arr_global_f.append(self.d_w_uber_freq[word])
+                arr_spec_f.append(this_freq)
+
+        if visualize_it:
+            fig, ax = plt.subplots()
+            ax.scatter(arr_spec_f[:cutoff], arr_global_f[:cutoff])
+
+            for i, txt in enumerate(arr_the_word[:cutoff]):
+                ax.annotate(txt, (arr_spec_f[i],arr_global_f[i]))
+            arr_the_word[:cutoff]
+            plt.show()
+
+        return arr_global_f[:cutoff], arr_spec_f[:cutoff], arr_the_word[:cutoff]
 
     def get_number_neurons_per_key(self):
         d_nums={}
