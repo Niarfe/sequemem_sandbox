@@ -18,6 +18,9 @@ files = [
     'data/sent_the_prince.txt',
     'data/sent_thousand_and_one.txt',
     'data/sent_fairy_tales.txt',
+    'data/king-james-bible-30.txt.utf-8',
+    'data/shakespear-complete-pg100.txt',
+    'data/Oxford_English_Dictionary.txt',
     ]
 
 for f in files:
