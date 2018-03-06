@@ -231,7 +231,7 @@ class Sequemem:
         total_neurons = len(self.get_number_neurons_per_key())
         d_w_uber_freq = {}
         for word, count in self.get_number_neurons_per_key().most_common():
-            d_w_uber_freq[word] = float(count/total_neurons)
+            d_w_uber_freq[word] = float(count)/total_neurons
         self.total_neurons = total_neurons
         self.d_w_uber_freq = d_w_uber_freq
         return total_neurons, d_w_uber_freq
@@ -251,11 +251,11 @@ class Sequemem:
 
         if visualize_it:
             fig, ax = plt.subplots()
-            ax.scatter(arr_spec_f[:cutoff], arr_global_f[:cutoff])
+            ax.scatter(arr_spec_f[1:cutoff], arr_global_f[1:cutoff])
 
-            for i, txt in enumerate(arr_the_word[:cutoff]):
-                ax.annotate(txt, (arr_spec_f[i],arr_global_f[i]))
-            arr_the_word[:cutoff]
+            for i, txt in enumerate(arr_the_word[1:cutoff]):
+                ax.annotate(txt, (arr_spec_f[i+1],arr_global_f[i+1]))
+            arr_the_word[1:cutoff]
             plt.show()
 
         return arr_global_f[:cutoff], arr_spec_f[:cutoff], arr_the_word[:cutoff]
