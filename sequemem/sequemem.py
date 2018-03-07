@@ -242,13 +242,17 @@ class Sequemem:
         arr_the_word = []
         arr_global_f = []
         arr_spec_f   = []
+
         for word, count in self.get_counts_for_specific_key(the_WORD).most_common():
             this_freq = float(count/(total_spec_w + 0.01))
             if float(self.d_w_uber_freq[word]/this_freq) <= ratio:
                 arr_the_word.append(word)
                 arr_global_f.append(self.d_w_uber_freq[word])
                 arr_spec_f.append(this_freq)
+                if len(arr_the_word) > cutoff:
+                    break
 
+        print("Going to start visual with {}".format(arr_the_word))
         if visualize_it:
             fig, ax = plt.subplots()
             ax.scatter(arr_spec_f[1:cutoff], arr_global_f[1:cutoff])
