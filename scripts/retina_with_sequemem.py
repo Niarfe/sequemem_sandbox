@@ -1,12 +1,12 @@
 import sys
 sys.path.append("./sequemem")
 from neuron import *
-from sequemem import *
+from layer_output import LayerCount 
 import random
 import numpy as np
 import pandas as pd
 
-layer = Sequemem()
+layer = LayerCount()
 
 files = [
     'data/00_clean/sent_alice_in_wonderland.txt',
@@ -26,7 +26,7 @@ files = [
 
 for f in files:
     print("starting: ", f)
-    layer.train_from_file_group_line(f)
+    layer.train_from_file(f)
 
 layer.initialize_frequency_dict()
-layer.comparison_frequencies('morgiana', 0.05, 15, True)
+layer.comparison_frequencies('Morgiana', 0.05, 15, True)

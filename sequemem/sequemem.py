@@ -253,14 +253,14 @@ class Sequemem:
                     break
 
         print("Going to start visual with {}".format(arr_the_word))
-        # if visualize_it:
-        #     fig, ax = plt.subplots()
-        #     ax.scatter(arr_spec_f[1:cutoff], arr_global_f[1:cutoff])
+        if visualize_it:
+            fig, ax = plt.subplots()
+            ax.scatter(arr_spec_f[1:cutoff], arr_global_f[1:cutoff])
 
-        #     for i, txt in enumerate(arr_the_word[1:cutoff]):
-        #         ax.annotate(txt, (arr_spec_f[i+1],arr_global_f[i+1]))
-        #     arr_the_word[1:cutoff]
-        #     plt.show()
+            for i, txt in enumerate(arr_the_word[1:cutoff]):
+                ax.annotate(txt, (arr_spec_f[i+1],arr_global_f[i+1]))
+            arr_the_word[1:cutoff]
+            plt.show()
 
         return arr_global_f[:cutoff], arr_spec_f[:cutoff], arr_the_word[:cutoff]
 

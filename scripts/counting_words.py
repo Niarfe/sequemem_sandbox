@@ -10,8 +10,8 @@ import pandas as pd
 layer = LayerCount()
 layer.train_from_file('data/cortical_example1.1.txt')
 
-for nrn in layer.columns["eat"]:
-    nrn.propagate_up(layer.global_counter, 2)
 
-print(layer.global_counter)
+print(layer.initialize_frequency_dict())
+
+print(layer.get_counts_for_specific_key('eat'))
 
