@@ -110,13 +110,15 @@ def debug(out_str):
     print("[{}]: {}".format(sys._getframe(1).f_code.co_name, out_str))
 class LayerCount:
     def __init__(self, name="anon"):
+        self.name = name
         self.columns = defaultdict(set)
         self.global_counter = Counter()
         self.word_counter = Counter()
         self.window_size = 5
-        self.name = name
         self.total_neurons = 0
+        self.total_sentences = 0
         self.last_touched_neuron = None
+        self.d_w_uber_freq = {}
 
     def reset(self):
         self.clear_global_counter()
@@ -141,7 +143,7 @@ class LayerCount:
             for idx, sentence in enumerate(source):
                 if idx % 10000 == 0: print(idx)
                 self.last_touched_neuron = None
-                self.hit([word for word in self.tokenize(sentence)])
+                self.add([word for word in self.tokenize(sentence)])
 
     def add(self, arr_sentence):
         debug(arr_sentence)
@@ -154,6 +156,7 @@ class LayerCount:
                 self.last_touched_neuron.add_upstream(nw_nrn)
                 nw_nrn.add_downstream(self.last_touched_neuron)
             self.last_touched_neuron = nw_nrn
+        self.total_sentences += 1
 
     def get_counter_for_sequence(self, sequence, window_size=2, direction=0):
         """Get counts for n-grams (treating sequence as n-gram)
@@ -170,7 +173,7 @@ class LayerCount:
         for nrn in nrns_group1:
             nrns_group2 = [nrn for nrn in nrns_group1
                             for upnrn in nrn.ns_upstream
-                            if upnrn.word == sequence[1]
+                            if upnrn.word == sequence[1]]
 
         for neuron in nrns_group2:
             if direction != -1:
@@ -198,29 +201,42 @@ class LayerCount:
         self.word_counter[key] = self.word_counter[key]/2
         return self.word_counter
 
-
     def get_number_neurons_per_key(self):
         d_nums={}
         for key, neurons in self.columns.items():
             d_nums[key] = len(neurons)
         return Counter(d_nums)
 
-class Prism:
-    def __init__(self, layerCounter):
-        self.layer_counter = layerCounter
-        self.d_w_uber_freq = {}
-
     def get_frequency_dict(self, force_init=False):
         """Get a count of all words but in frequency terms, for global counts"""
         if len(self.d_w_uber_freq) == 0 or force_init == True:
             print("Re-iitializing dictionary")
             self.d_w_uber_freq = {}
-            self.total_neurons = len(self.layer_counter.get_number_neurons_per_key())
 
-            for word, count in self.layer_counter.get_number_neurons_per_key().most_common():
-                self.d_w_uber_freq[word] = float(count)/self.total_neurons
 
-        return self.total_neurons, self.d_w_uber_freq
+            for word, count in self.get_number_neurons_per_key().most_common():
+                self.d_w_uber_freq[word] = float(count)/self.total_sentences
+
+        return self.total_sentences, self.d_w_uber_freq
+
+    def __repr__(self):
+        val  =   "LayerCounter:     {}".format(self.name)
+        val += "\nTotal Neurons:    {}".format(self.total_neurons)
+        val += "\nNumber of cols:   {}".format(len(self.columns))
+        val += "\nTop 10:           {}".format(self.global_counter.most_common(10))
+        val += "\nFreq dict sample  {}".format(self.d_w_uber_freq)
+
+        return val
+
+#########################################################################################
+#  PRISM
+#########################################################################################
+class Prism:
+    def __init__(self, layerCounter):
+        self.layer_counter = layerCounter
+        self.d_w_uber_freq = {}
+
+
 
     def comparison_frequencies(self, the_WORD, ratio=0.05, cutoff=15, visualize_it=False):
         word_test, total_spec_w = self.layer_counter.get_counts_for_specific_key(the_WORD).most_common(1)[0] # should be itself
