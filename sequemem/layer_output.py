@@ -149,9 +149,10 @@ class LayerCount:
         debug(arr_sentence)
         for word in arr_sentence:
             debug("\t\tadding neuron to column {}".format(word))
+
             nw_nrn = CountingNeuron(word)
             self.columns[word].add(nw_nrn)
-
+            self.total_neurons += 1
             if self.last_touched_neuron != None:
                 self.last_touched_neuron.add_upstream(nw_nrn)
                 nw_nrn.add_downstream(self.last_touched_neuron)
@@ -201,27 +202,60 @@ class LayerCount:
         self.word_counter[key] = self.word_counter[key]/2
         return self.word_counter
 
-    def get_number_neurons_per_key(self):
-        d_nums={}
-        for key, neurons in self.columns.items():
-            d_nums[key] = len(neurons)
-        return Counter(d_nums)
+    def get_number_neurons_per_key(self, reset=False):
+        if reset or not self.global_counter:
+            for key, neurons in self.columns.items():
+                self.global_counter[key] = len(neurons)
+        return self.global_counter
 
     def get_frequency_dict(self, force_init=False):
         """Get a count of all words but in frequency terms, for global counts"""
         if len(self.d_w_uber_freq) == 0 or force_init == True:
             print("Re-iitializing dictionary")
             self.d_w_uber_freq = {}
-
-
             for word, count in self.get_number_neurons_per_key().most_common():
                 self.d_w_uber_freq[word] = float(count)/self.total_sentences
 
         return self.total_sentences, self.d_w_uber_freq
 
+    def get_frequency_dict_word(self, word):
+        center_count = self.get_counts_for_specific_key(word, 1)[word]
+        elems = self.get_counts_for_specific_key(word).most_common()
+        return { _word: float(_count)/center_count for _word, _count in elems}
+
+
+    def comparison_frequencies(self, the_WORD, ratio=0.05, cutoff=15, visualize_it=False):
+        word_test, total_spec_w = self.get_counts_for_specific_key(the_WORD).most_common(1)[0] # should be itself
+        print("Count for ", word_test," is ", total_spec_w)
+        arr_the_word = []
+        arr_global_f = []
+        arr_spec_f   = []
+
+        for word, count in self.get_counts_for_specific_key(the_WORD).most_common():
+            this_freq = float(count / (total_spec_w + 0.01))
+            print(self.d_w_uber_freq)
+            if float(self.d_w_uber_freq[word]/this_freq) <= ratio:
+                arr_the_word.append(word)
+                arr_global_f.append(self.d_w_uber_freq[word])
+                arr_spec_f.append(this_freq)
+                if len(arr_the_word) > cutoff:
+                    break
+
+        print("Going to start visual with {}".format(arr_the_word))
+        if visualize_it:
+            fig, ax = plt.subplots()
+            ax.scatter(arr_spec_f[cutoff], arr_global_f[cutoff])
+
+            for i, txt in enumerate(arr_the_word[cutoff]):
+                ax.annotate(txt, (arr_spec_f[i+1],arr_global_f[i+1]))
+            arr_the_word[cutoff]
+            plt.show()
+
+        return arr_global_f[:cutoff], arr_spec_f[:cutoff], arr_the_word[:cutoff]
+
     def __repr__(self):
         val  =   "LayerCounter:     {}".format(self.name)
-        val += "\nTotal Neurons:    {}".format(self.total_neurons)
+        val += "\nTotal sentences:    {}".format(self.total_sentences)
         val += "\nNumber of cols:   {}".format(len(self.columns))
         val += "\nTop 10:           {}".format(self.global_counter.most_common(10))
         val += "\nFreq dict sample  {}".format(self.d_w_uber_freq)

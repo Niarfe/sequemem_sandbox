@@ -166,6 +166,6 @@ class CountingNeuron(object):
         ntimes -= 1
         if ntimes > 0:
             for nrn in self.ns_downstream:
-                nrn.propagate_up(cntr, ntimes)
+                nrn.propagate_dn(cntr, ntimes)
         else:
             return

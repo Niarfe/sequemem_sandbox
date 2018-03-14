@@ -29,7 +29,7 @@ for f in files:
     print("starting: ", f)
     layer.load_from_file(f)
 
-
-
+layer.get_frequency_dict();
+layer.comparison_frequencies('c')
 #layer.get_frequency_dict()
 #layer.comparison_frequencies('Alice', 0.05, 15, True)
