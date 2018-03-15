@@ -148,17 +148,12 @@ class CountingNeuron(object):
     def __str__(self):
         return "<nrn: {}>".format(self.word)
 
-    def propagate_up(self, cntr, ntimes, sequence=None):
-        if sequence != None:
-            if sequence[0] != self.key:
-                return
-            else:
-                sequence = sequence[1:]
+    def propagate_up(self, cntr, ntimes):
         cntr[self.word] += 1
         ntimes -= 1
         if ntimes > 0:
             for nrn in self.ns_upstream:
-                nrn.propagate_up(cntr, ntimes, sequence)
+                nrn.propagate_up(cntr, ntimes)
         else:
             return
     def propagate_dn(self, cntr, ntimes):
@@ -168,4 +163,15 @@ class CountingNeuron(object):
             for nrn in self.ns_downstream:
                 nrn.propagate_dn(cntr, ntimes)
         else:
+            return
+
+    def propagate_sequence(self, cntr, sequence, direction=0):
+        assert len(sequence) > 0, "Passing down should have sent something in"
+        _key = sequence.pop(0)
+        if _key == self.word and len(sequence) == 0:
+            cntr[self.word] += 1
+            return
+        elif _key == self.word:
+            for nrn in self.ns_upstream:
+                nrn.propagate_sequence(cntr, sequence[:], direction)
             return

@@ -159,7 +159,7 @@ class LayerCount:
             self.last_touched_neuron = nw_nrn
         self.total_sentences += 1
 
-    def get_counter_for_sequence(self, sequence, window_size=2, direction=0):
+    def get_counter_for_sequence(self, sequence, direction=0):
         """Get counts for n-grams (treating sequence as n-gram)
         Go out window_size steps, includes end words of seqence.
         Args:
@@ -168,20 +168,10 @@ class LayerCount:
             direction: -1 back only, 0 both ways, 1 forward only
         """
         self.word_counter.clear()
-        self.window_size = window_size
         nrn_group = []
-        nrns_group1 = self.columns[sequence[0]]
-        for nrn in nrns_group1:
-            nrns_group2 = [nrn for nrn in nrns_group1
-                            for upnrn in nrn.ns_upstream
-                            if upnrn.word == sequence[1]]
+        for nrn in self.columns[sequence[0]]:
+            nrn.propagate_sequence(self.word_counter, sequence[:])
 
-        for neuron in nrns_group2:
-            if direction != -1:
-                neuron.propagate_up(self.word_counter, self.window_size, sequence)
-            if direction != 1:
-                neuron.propagate_dn(self.word_counter, self.window_size, sequence)
-        self.word_counter[key] = self.word_counter[key]/2
         return self.word_counter
 
     def get_counts_for_specific_key(self, key, window_size=5, direction=0):
@@ -224,34 +214,44 @@ class LayerCount:
         return { _word: float(_count)/center_count for _word, _count in elems}
 
 
-    def comparison_frequencies(self, the_WORD, ratio=0.05, cutoff=15, visualize_it=False):
+    def comparison_frequencies(self, the_WORD, window_size=5, ratio=0.05, cutoff=15, visualize_it=False, axis_lims=(0.0,1.0)):
         word_test, total_spec_w = self.get_counts_for_specific_key(the_WORD).most_common(1)[0] # should be itself
         print("Count for ", word_test," is ", total_spec_w)
         arr_the_word = []
         arr_global_f = []
         arr_spec_f   = []
 
-        for word, count in self.get_counts_for_specific_key(the_WORD).most_common():
+        for word, count in self.get_counts_for_specific_key(the_WORD, window_size).most_common():
             this_freq = float(count / (total_spec_w + 0.01))
-            print(self.d_w_uber_freq)
             if float(self.d_w_uber_freq[word]/this_freq) <= ratio:
                 arr_the_word.append(word)
                 arr_global_f.append(self.d_w_uber_freq[word])
                 arr_spec_f.append(this_freq)
                 if len(arr_the_word) > cutoff:
                     break
-
-        print("Going to start visual with {}".format(arr_the_word))
+        if len(arr_the_word) == 0:
+            print("The word array is empty, nothing to see here")
+            return [],[],[]
         if visualize_it:
+            print("Going to start visual with {}".format(arr_the_word))
+            print(arr_spec_f)
+            print(arr_global_f)
+            print(arr_the_word)
+            #plt.ylim(0,1)
             fig, ax = plt.subplots()
-            ax.scatter(arr_spec_f[cutoff], arr_global_f[cutoff])
+            low, high = axis_lims
+            ax.set_xlim(low, high)
+            ax.set_ylim(low, high)
+            ax.set_aspect('equal')
+            ax.scatter(arr_spec_f, arr_global_f)
 
-            for i, txt in enumerate(arr_the_word[cutoff]):
-                ax.annotate(txt, (arr_spec_f[i+1],arr_global_f[i+1]))
-            arr_the_word[cutoff]
+            for i, txt in enumerate(arr_the_word):
+                if i > 2: txt = ''
+                ax.annotate(txt, (arr_spec_f[i],arr_global_f[i]))
+
             plt.show()
 
-        return arr_global_f[:cutoff], arr_spec_f[:cutoff], arr_the_word[:cutoff]
+        return arr_global_f, arr_spec_f, arr_the_word
 
     def __repr__(self):
         val  =   "LayerCounter:     {}".format(self.name)

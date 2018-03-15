@@ -20,3 +20,7 @@ def test_layer_count_smoke_test():
     assert layer.get_counts_for_specific_key('f', 1) == Counter({'f':4})
     assert layer.get_counts_for_specific_key('f', 2) == Counter({'e': 4, 'f': 4, 'g': 3})
     assert layer.get_frequency_dict_word('e') == { 'e': 1, 'd': 0.8, 'f':0.8, 'c':0.6, 'g':0.6, 'b':0.4,'h':0.4,'a':0.2, 'i':0.2}
+
+    # Try out counting bi-grams tri-grams and n-grams in general...
+    assert layer.get_counter_for_sequence(['c', 'd']) == Counter({'d': 3})
+    assert layer.get_counter_for_sequence(['d','e','f']) == Counter({'f':3})
