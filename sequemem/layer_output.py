@@ -216,7 +216,7 @@ class LayerCount:
 
     def comparison_frequencies(self, the_WORD, window_size=5, ratio=0.05, cutoff=15, visualize_it=False, axis_lims=(0.0,1.0)):
         word_test, total_spec_w = self.get_counts_for_specific_key(the_WORD).most_common(1)[0] # should be itself
-        print("Count for ", word_test," is ", total_spec_w)
+        #print("Count for ", word_test," is ", total_spec_w)
         arr_the_word = []
         arr_global_f = []
         arr_spec_f   = []
