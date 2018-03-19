@@ -137,13 +137,13 @@ class LayerCount:
     def tokenize(self, sentence):
         return [str(word.strip().strip('\r\n\t.')) for word in sentence.strip().split(' ')]
 
-    def load_from_file(self, filepath):
+    def load_from_file(self, filepath, lower=False):
         print("Loading file {}".format(filepath))
         with open(filepath,'r') as source:
             for idx, sentence in enumerate(source):
                 if idx % 10000 == 0: print(idx)
                 self.last_touched_neuron = None
-                self.add([word for word in self.tokenize(sentence)])
+                self.add([word.lower().strip() if lower else word for word in self.tokenize(sentence)])
 
     def add(self, arr_sentence):
         debug(arr_sentence)
@@ -175,7 +175,11 @@ class LayerCount:
         return self.word_counter
 
     def get_counts_for_specific_key(self, key, window_size=5, direction=0):
-        """Get the neighborhood count of words for given key
+        """Get the neighborhood count of words for given key.
+        For example, if you want to know what word is most common in front of
+        'is', use key='is', window_size=2, and direction=1.  If you want the
+        word behind it, use direction=-1, and if you want what is the most common
+        word in a +-10 hood around it use window_size=10, direction=0.
         Args:
             key: get every neuron found in this column
             window_size: Counting 1 from given column, take up to that many steps
@@ -215,6 +219,22 @@ class LayerCount:
 
 
     def comparison_frequencies(self, the_WORD, window_size=5, ratio=0.05, cutoff=15, visualize_it=False, axis_lims=(0.0,1.0)):
+        """Apply the graphical frequency comparison method.
+        For the given word, take a neighborood of words of +- words (window_size).  Compare
+        the frequency of the overall words, (y axis) to the frequency of words found in
+        the neighborhood.  Then use th ratio to cut out the words above the line, and keep
+        only the top cutoff words.  This has the effect of cutting out the stop words.
+
+        Args:
+            the_WORD: string, the word to pivot around for the counts. Center of hood.
+            window_size: int, take that number of words behind and forward for each sentence.
+            ratio: float, take ratio of a any word in hood, and if the ratio of background/hood is
+                    greater remove the word.
+            cutoff: int, after processing words, keep this many words from top to bottom.
+            visualize_it: Bool, True to invoke matplotlib and visualize word plot
+            axis_lims: (float,float), each between 0 and 1.0, x and y axis of plot, (to zoom in)
+        """
+
         word_test, total_spec_w = self.get_counts_for_specific_key(the_WORD).most_common(1)[0] # should be itself
         #print("Count for ", word_test," is ", total_spec_w)
         arr_the_word = []
@@ -230,7 +250,7 @@ class LayerCount:
                 if len(arr_the_word) > cutoff:
                     break
         if len(arr_the_word) == 0:
-            print("The word array is empty, nothing to see here")
+           # print("The word array is empty, nothing to see here")
             return [],[],[]
         if visualize_it:
             print("Going to start visual with {}".format(arr_the_word))
@@ -252,6 +272,25 @@ class LayerCount:
             plt.show()
 
         return arr_global_f, arr_spec_f, arr_the_word
+
+    def jaccard(self, w1, w2, _window_size=5, _cutoff=10, _ratio=0.25):
+        """Calculate jaccard distance between two words from their graphical representation
+        as calculated with window_size and ratio.  Keep the number of cutoff words for the calculation.
+        Args:
+            w1: string, the first word for comparison
+            w2: string, the second word for comparison
+            window_size: int, go +- this number of words to calculate frequencies for graphical calc.
+            ratio: float, use this as cutoff in graphical calculation
+            cutoff: int, from graphical calculation, keep this number of words, the jaccard distance
+                    is then calculated as the overlap of these two sets.
+        """
+        _,_,lst1 = self.comparison_frequencies(w1, window_size=_window_size,ratio=_ratio, cutoff=_cutoff);
+        _,_,lst2 = self.comparison_frequencies(w2, window_size=_window_size,ratio=_ratio, cutoff=_cutoff);
+
+        u = len(set(lst1).union(set(lst2))) + 0.0000000001
+        i = len(set(lst1).intersection(set(lst2)))
+        return float(i)/float(u)
+
 
     def __repr__(self):
         val  =   "LayerCounter:     {}".format(self.name)
