@@ -1,5 +1,6 @@
 from neuron import Neuron
 from neuron import SimpleNeuron
+from neuron import CountingNeuron
 
 class LayerSimpleOutput:
     def __init__(self):
@@ -99,3 +100,276 @@ class LayerSimpleOutput:
         return "OutputLayer: {}".format(self.global_state)
     def __str__(self):
         return "OutputLayer: {}".format(self.global_state)
+
+from collections import Counter
+from collections import defaultdict
+import matplotlib.pyplot as plt
+import sys
+def debug(out_str):
+    return
+    print("[{}]: {}".format(sys._getframe(1).f_code.co_name, out_str))
+class LayerCount:
+    def __init__(self, name="anon"):
+        self.name = name
+        self.columns = defaultdict(set)
+        self.global_counter = Counter()
+        self.word_counter = Counter()
+        self.window_size = 5
+        self.total_neurons = 0
+        self.total_sentences = 0
+        self.last_touched_neuron = None
+        self.d_w_uber_freq = {}
+
+    def reset(self):
+        self.clear_global_counter()
+        self.clear_word_counter()
+    def clear_word_counter(self):
+        self.word_counter = Counter()
+    def clear_global_counter(self):
+        self.global_counter = Counter()
+
+    def set_window(self, window):
+        self.window_size = window
+    def sequencer(self, str_rep):
+        assert type(str_rep) == type(""), "sequencer type must be string"
+        return [[word.strip()] for word in str_rep.split(' ')]
+
+    def tokenize(self, sentence):
+        return [str(word.strip().strip('\r\n\t.')) for word in sentence.strip().split(' ')]
+
+    def load_from_file(self, filepath, lower=False):
+        print("Loading file {}".format(filepath))
+        with open(filepath,'r') as source:
+            for idx, sentence in enumerate(source):
+                if idx % 10000 == 0: print(idx)
+                self.last_touched_neuron = None
+                self.add([word.lower().strip() if lower else word for word in self.tokenize(sentence)])
+
+    def add(self, arr_sentence):
+        debug(arr_sentence)
+        for word in arr_sentence:
+            debug("\t\tadding neuron to column {}".format(word))
+
+            nw_nrn = CountingNeuron(word)
+            self.columns[word].add(nw_nrn)
+            self.total_neurons += 1
+            if self.last_touched_neuron != None:
+                self.last_touched_neuron.add_upstream(nw_nrn)
+                nw_nrn.add_downstream(self.last_touched_neuron)
+            self.last_touched_neuron = nw_nrn
+        self.total_sentences += 1
+
+    def get_counter_for_sequence(self, sequence, direction=0):
+        """Get counts for n-grams (treating sequence as n-gram)
+        Go out window_size steps, includes end words of seqence.
+        Args:
+            sequence: list<words> list of words to use for n-gram
+            window_size: how far to go forward or backwards, includes endpoints
+            direction: -1 back only, 0 both ways, 1 forward only
+        """
+        self.word_counter.clear()
+        nrn_group = []
+        for nrn in self.columns[sequence[0]]:
+            nrn.propagate_sequence(self.word_counter, sequence[:])
+
+        return self.word_counter
+
+    def get_counts_for_specific_key(self, key, window_size=5, direction=0):
+        """Get the neighborhood count of words for given key.
+        For example, if you want to know what word is most common in front of
+        'is', use key='is', window_size=2, and direction=1.  If you want the
+        word behind it, use direction=-1, and if you want what is the most common
+        word in a +-10 hood around it use window_size=10, direction=0.
+        Args:
+            key: get every neuron found in this column
+            window_size: Counting 1 from given column, take up to that many steps
+            direction: 0 go both up and down.  -1 down only and 1 up only.
+        """
+
+        self.word_counter.clear()
+        self.window_size = window_size
+        for neuron in self.columns[key]:
+            if direction != -1:
+                neuron.propagate_up(self.word_counter, self.window_size)
+            if direction != 1:
+                neuron.propagate_dn(self.word_counter, self.window_size)
+        self.word_counter[key] = self.word_counter[key]/2
+        return self.word_counter
+
+    def get_number_neurons_per_key(self, reset=False):
+        if reset or not self.global_counter:
+            for key, neurons in self.columns.items():
+                self.global_counter[key] = len(neurons)
+        return self.global_counter
+
+    def get_frequency_dict(self, force_init=False):
+        """Get a count of all words but in frequency terms, for global counts"""
+        if len(self.d_w_uber_freq) == 0 or force_init == True:
+            print("Re-iitializing dictionary")
+            self.d_w_uber_freq = {}
+            for word, count in self.get_number_neurons_per_key().most_common():
+                self.d_w_uber_freq[word] = float(count)/self.total_sentences
+
+        return self.total_sentences, self.d_w_uber_freq
+
+    def get_frequency_dict_word(self, word):
+        center_count = self.get_counts_for_specific_key(word, 1)[word]
+        elems = self.get_counts_for_specific_key(word).most_common()
+        return { _word: float(_count)/center_count for _word, _count in elems}
+
+
+    def comparison_frequencies(self, the_WORD, window_size=5, ratio=0.05, cutoff=15, visualize_it=False, axis_lims=(0.0,1.0)):
+        """Apply the graphical frequency comparison method.
+        For the given word, take a neighborood of words of +- words (window_size).  Compare
+        the frequency of the overall words, (y axis) to the frequency of words found in
+        the neighborhood.  Then use th ratio to cut out the words above the line, and keep
+        only the top cutoff words.  This has the effect of cutting out the stop words.
+
+        Args:
+            the_WORD: string, the word to pivot around for the counts. Center of hood.
+            window_size: int, take that number of words behind and forward for each sentence.
+            ratio: float, take ratio of a any word in hood, and if the ratio of background/hood is
+                    greater remove the word.
+            cutoff: int, after processing words, keep this many words from top to bottom.
+            visualize_it: Bool, True to invoke matplotlib and visualize word plot
+            axis_lims: (float,float), each between 0 and 1.0, x and y axis of plot, (to zoom in)
+        """
+
+        word_test, total_spec_w = self.get_counts_for_specific_key(the_WORD).most_common(1)[0] # should be itself
+        #print("Count for ", word_test," is ", total_spec_w)
+        arr_the_word = []
+        arr_global_f = []
+        arr_spec_f   = []
+
+        for word, count in self.get_counts_for_specific_key(the_WORD, window_size).most_common():
+            this_freq = float(count / (total_spec_w + 0.01))
+            if float(self.d_w_uber_freq[word]/this_freq) <= ratio:
+                arr_the_word.append(word)
+                arr_global_f.append(self.d_w_uber_freq[word])
+                arr_spec_f.append(this_freq)
+                if len(arr_the_word) > cutoff:
+                    break
+        if len(arr_the_word) == 0:
+           # print("The word array is empty, nothing to see here")
+            return [],[],[]
+        if visualize_it:
+            print("Going to start visual with {}".format(arr_the_word))
+            print(arr_spec_f)
+            print(arr_global_f)
+            print(arr_the_word)
+            #plt.ylim(0,1)
+            fig, ax = plt.subplots()
+            low, high = axis_lims
+            ax.set_xlim(low, high)
+            ax.set_ylim(low, high)
+            ax.set_aspect('equal')
+            ax.scatter(arr_spec_f, arr_global_f)
+
+            for i, txt in enumerate(arr_the_word):
+                if i > 2: txt = ''
+                ax.annotate(txt, (arr_spec_f[i],arr_global_f[i]))
+
+            plt.show()
+
+        return arr_global_f, arr_spec_f, arr_the_word
+
+    def jaccard(self, w1, w2, _window_size=5, _cutoff=10, _ratio=0.25):
+        """Calculate jaccard distance between two words from their graphical representation
+        as calculated with window_size and ratio.  Keep the number of cutoff words for the calculation.
+        Args:
+            w1: string, the first word for comparison
+            w2: string, the second word for comparison
+            window_size: int, go +- this number of words to calculate frequencies for graphical calc.
+            ratio: float, use this as cutoff in graphical calculation
+            cutoff: int, from graphical calculation, keep this number of words, the jaccard distance
+                    is then calculated as the overlap of these two sets.
+        """
+        _,_,lst1 = self.comparison_frequencies(w1, window_size=_window_size,ratio=_ratio, cutoff=_cutoff);
+        _,_,lst2 = self.comparison_frequencies(w2, window_size=_window_size,ratio=_ratio, cutoff=_cutoff);
+
+        u = len(set(lst1).union(set(lst2))) + 0.0000000001
+        i = len(set(lst1).intersection(set(lst2)))
+        return float(i)/float(u)
+
+
+    def __repr__(self):
+        val  =   "LayerCounter:     {}".format(self.name)
+        val += "\nTotal sentences:    {}".format(self.total_sentences)
+        val += "\nNumber of cols:   {}".format(len(self.columns))
+        val += "\nTop 10:           {}".format(self.global_counter.most_common(10))
+        val += "\nFreq dict sample  {}".format(self.d_w_uber_freq)
+
+        return val
+
+#########################################################################################
+#  PRISM
+#########################################################################################
+class Prism:
+    def __init__(self, layerCounter):
+        self.layer_counter = layerCounter
+        self.d_w_uber_freq = {}
+
+
+
+    def comparison_frequencies(self, the_WORD, ratio=0.05, cutoff=15, visualize_it=False):
+        word_test, total_spec_w = self.layer_counter.get_counts_for_specific_key(the_WORD).most_common(1)[0] # should be itself
+        print("Count for ", word_test," is ", total_spec_w)
+        arr_the_word = []
+        arr_global_f = []
+        arr_spec_f   = []
+
+        for word, count in self.layer_counter.get_counts_for_specific_key(the_WORD).most_common():
+            this_freq = float(count/(total_spec_w + 0.01))
+            if float(self.d_w_uber_freq[word]/this_freq) <= ratio:
+                arr_the_word.append(word)
+                arr_global_f.append(self.d_w_uber_freq[word])
+                arr_spec_f.append(this_freq)
+                if len(arr_the_word) > cutoff:
+                    break
+
+        print("Going to start visual with {}".format(arr_the_word))
+        if visualize_it:
+            fig, ax = plt.subplots()
+            ax.scatter(arr_spec_f[1:cutoff], arr_global_f[1:cutoff])
+
+            for i, txt in enumerate(arr_the_word[1:cutoff]):
+                ax.annotate(txt, (arr_spec_f[i+1],arr_global_f[i+1]))
+            arr_the_word[1:cutoff]
+            plt.show()
+
+        return arr_global_f[:cutoff], arr_spec_f[:cutoff], arr_the_word[:cutoff]
+
+
+    def get_predicted_counts_from_lighting_columns(self, lst_keys):
+        self.full_reset()
+        for key in lst_keys:
+            self.light_column(key)
+        predicted_neurons = self.global_state["predict"]
+        lst = []
+        for neuron in predicted_neurons:
+            [lst.append(key) for key in neuron.keys]
+
+        return Counter(lst)
+
+    def compare_two_words(self, w1, w2, nhits=100):
+        common_w1 = self.get_counts_for_specific_key(w1).most_common(nhits)
+        common_w2 = self.get_counts_for_specific_key(w2).most_common(nhits)
+        set_w1 = set([k for k, v in common_w1])
+        set_w2 = set([k for k, v in common_w2])
+        return set_w1 - set_w2
+
+    def related_to_word(self, w1, remove_common=True, nhits=100, nstops=100):
+        common_w1 = self.get_counts_for_specific_key(w1).most_common(nhits)
+        set_w1 = set([k for k, v in common_w1])
+        if remove_common:
+            stop_words = self.get_number_neurons_per_key().most_common(nstops)
+            set_stop_words = set([k for k, v in stop_words])
+            return set_w1 - set_stop_words
+        else:
+            return set_w1
+
+
+    def get_top_x_words_in_layer(self, x):
+        """Return list of the top x words with the highest count in the layer"""
+        return [word for word, _ in layer.get_number_neurons_per_key().most_common()[:x]]
+

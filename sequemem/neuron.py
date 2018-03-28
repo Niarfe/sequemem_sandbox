@@ -126,3 +126,52 @@ class Neuron(BaseNeuron):
                     neuron.set_inactive()
             return
         assert False, "set_inactive failed"
+
+class CountingNeuron(object):
+    def __init__(self, key):
+        self.predict_times = 0
+        self.ns_downstream = []
+        self.ns_upstream = []
+        self.word = key
+
+    def get_word(self):
+        return self.keys
+
+    def add_upstream(self, neuron):
+        self.ns_upstream.append(neuron)
+
+    def add_downstream(self, neuron):
+        self.ns_downstream.append(neuron)
+
+    def __repr__(self):
+        return "<nrn: {}>".format(self.word)
+    def __str__(self):
+        return "<nrn: {}>".format(self.word)
+
+    def propagate_up(self, cntr, ntimes):
+        cntr[self.word] += 1
+        ntimes -= 1
+        if ntimes > 0:
+            for nrn in self.ns_upstream:
+                nrn.propagate_up(cntr, ntimes)
+        else:
+            return
+    def propagate_dn(self, cntr, ntimes):
+        cntr[self.word] += 1
+        ntimes -= 1
+        if ntimes > 0:
+            for nrn in self.ns_downstream:
+                nrn.propagate_dn(cntr, ntimes)
+        else:
+            return
+
+    def propagate_sequence(self, cntr, sequence, direction=0):
+        assert len(sequence) > 0, "Passing down should have sent something in"
+        _key = sequence.pop(0)
+        if _key == self.word and len(sequence) == 0:
+            cntr[self.word] += 1
+            return
+        elif _key == self.word:
+            for nrn in self.ns_upstream:
+                nrn.propagate_sequence(cntr, sequence[:], direction)
+            return

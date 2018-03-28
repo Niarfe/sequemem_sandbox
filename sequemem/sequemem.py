@@ -2,7 +2,7 @@ from collections import defaultdict
 import sys
 from neuron import *
 from layer_output import LayerSimpleOutput
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from collections import Counter
 
 def debug(out_str):
