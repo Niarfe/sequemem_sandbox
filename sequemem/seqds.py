@@ -42,7 +42,7 @@ class Node:
 class Seqds:
     def __init__(self, uuid):
         self.uuid = uuid
-        self.layer = defaultdict(list)
+        self.columns = defaultdict(list)
         self.n_init = Node('<start>', '<start>')
         
         self.active = []
@@ -58,6 +58,7 @@ class Seqds:
         self.sdr_active = []
         self.predicted.extend(self.n_init.nexts)
         self.active.append(self.n_init)
+        return self
     
     def predict(self, str_sentence):
         """Generate sdr for what comes next in sequence if we know.  Internally set sdr of actives
@@ -72,8 +73,8 @@ class Seqds:
 
         [self.hit(word, self._hist(words, idx)) for idx, word in enumerate(words)]
                 
-        self.sdr_active    = [node.sequence for node in self.active]
-        self.sdr_predicted = [node.key      for node in self.predicted]
+        self.sdr_active    = sorted([node.sequence for node in self.active])
+        self.sdr_predicted = sorted([node.key      for node in self.predicted])
         return self
             
     def _get_word_array(self, str_sentence):
@@ -88,7 +89,7 @@ class Seqds:
             word        string, current word being processed
             seq_hist    string, represents word history up to how, # separated concatenation
         Returns
-            bool        True if we have an active neuron(s) after operation, False othewise
+            self        so we can chain query for active or predicted
         """ 
         last_active, last_predicted = self.active[:], self.predicted[:]
         self.active, self.predicted = [], []
@@ -96,14 +97,18 @@ class Seqds:
         self.active    = [node for node in last_predicted if node.key == word]
         self.predicted = [nextn for node in self.active for nextn in node.nexts]
 
-        if len(self.active) == 0:
+        if not self.active:
             node =  Node(word, seq_hist)
-            self.layer[word] = node
-            for n in last_active:
-                n.link_nexts(node)
-                self.active.append(node)       
+            self.columns[word].append(node)
+            self.active.append(node)
+            
+            [n.link_nexts(node) for n in last_active]
+        
+        assert self.active
+        return self
 
-        return True if len(self.active) > 0 else False
+    def get_sdrs(self):
+        return [self.sdr_active, self.sdr_predicted]
 
     def __repr__(self):
         return "uuid: {}\nn_init: {}\npredicted: {}\nactive: {}\nsdr_active: {}\nsdr_predicted: {}".format(
